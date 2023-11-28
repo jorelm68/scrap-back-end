@@ -1,0 +1,44 @@
+Photo
+    int photo_id
+    buffer image_data
+
+Author
+    int author_id
+    string pseudonym
+    string first_name
+    string last_name
+    string autobiography
+    array<int(author_id)> friends
+    array<int(author_id)> outgoing_friend_requests
+    array<int(author_id)> incoming_friend_requests
+    array<int(scrap_id)> scraps
+    array<int(book_id)> books
+    array<int(book_id)> book_contributions
+    array<int(scrap_id)> liked_scraps
+    array<int(scrap_id)> liked_books
+    int device_token
+
+Scrap
+    int scrap_id
+    string title
+    string description
+    int(photo_id) prograph
+    int(photo_id) retrograph
+    int time_stamp
+    int latitude
+    int longitude
+    array<int(author_id)> likes
+    array<int(author_id)> views
+
+Book
+    int book_id
+    string title
+    string description
+    int(photo_id) cover
+    int begin_time_stamp
+    int end_time_stamp
+    int latitude
+    int longitude
+    array<int(author_id)> likes
+    array<int(scrap_id)> threads (the backwards pointers to scraps that thread this book)
+    unordered_map<int(scrap_id), array<int(book_id)>> scraps (each scrap can thread multiple books)
