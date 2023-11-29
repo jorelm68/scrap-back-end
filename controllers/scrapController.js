@@ -21,20 +21,6 @@ const saveScrap = async (req, res) => {
     await handleRequest(req, res, code)
 }
 
-const addLike = async (req, res) => {
-    const code = async (req, res) => {
-
-    }
-    await handleRequest(req, res, code)
-}
-
-const removeLike = async (req, res) => {
-    const code = async (req, res) => {
-
-    }
-    await handleRequest(req, res, code)
-}
-
  const addThread = async (req, res) => {
     const code = async (req, res) => {
 
@@ -52,8 +38,6 @@ const removeLike = async (req, res) => {
 module.exports = {
     exists,
     saveScrap,
-    addLike,
-    removeLike,
     addThread,
     removeThread,
 }

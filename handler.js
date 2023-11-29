@@ -45,17 +45,100 @@ const handleInputValidation = async (req, res, checks, validationResult) => {
     }
 }
 
-const handleFindAuthor = async (_id) => {
-    return await Author.findById(_id)
+const handleCreateAuthor = async (author) => {
+    const authorModel = await Author.create(author)
+    await authorModel.save()
+
+    return authorModel._id
 }
-const handleFindAction = async (_id) => {
-    return await Action.findById(_id)
+
+const handleMongoVerifyPassword = async (_id, password) => {
+    const authorModel = await Author.findById(_id)
+    return authorModel && await authorModel.comparePassword(password)
 }
-const handleFindBook = async (_id) => {
-    return await Book.findById(_id)
+const handleMongoFilter = async (modelName, key, value) => {
+    const Model = mongoose.model(modelName)
+
+    await Model.updateMany(
+        { [key]: { $in: [value] } },
+        { $pull: { [key]: value } }
+    )
 }
-const handleFindScrap = async (_id) => {
-    return await Scrap.findById(_id)
+
+const deepDeleteAuthor = async (req, res, _id) => {
+    const authorModel = await Author.findById(_id)
+
+    if (!authorModel) {
+        return handleError(res, 400, `Could not find author ${_id}`)
+    }
+
+    const scraps = authorModel.scraps
+    const books = authorModel.books
+
+    // Find all actions that reference the author
+    let actions = []
+    Action.find({
+        $or: [
+            { senderAuthor: _id },
+            { targetAuthor: _id }
+        ]
+    }, '_id', (err, action_ids) => {
+        if (err) {
+            handleError(res, 400, `Error finding actions associated with ${authorModel.pseudonym}`)
+        } else {
+            actions = action_ids
+        }
+    });
+
+    // Delete any Action from any author that references the author
+    const deleteActions = []
+    for (const action of actions) {
+        deleteActions.push(deepDeleteAction(req, res, action))
+    }
+    await Promise.all(deleteActions)
+
+    // Deep delete all the author's scraps
+    const deleteScraps = []
+    for (const scrap of scraps) {
+        deleteScraps.push(deepDeleteScrap(req, res, scrap))
+    }
+    await Promise.all(deleteScraps)
+
+    // Deep delete all the author's books
+    const deleteBooks = []
+    for (const book of books) {
+        deleteBooks.push(deepDeleteBook(req, res, book))
+    }
+
+    await Promise.all([
+        // Delete the author id from any friends
+        handleMongoFilter('Author', 'friends', _id),
+        handleMongoFilter('Author', 'incomingFriendRequests', _id),
+        handleMongoFilter('Author', 'outgoingFriendRequests', _id),
+        handleMongoFilter('Book', 'likes', _id),
+    ])
+    await Promise.all(deleteBooks)
+}
+const deepDeleteBook = async (req, res, _id) => {
+    const bookModel = await Book.findById(_id)
+    const scraps = bookModel.scraps
+}
+const deepDeleteScrap = async (req, res, _id) => {
+    const scrapModel = await Scrap.findById(_id)
+}
+const deepDeleteAction = async (req, res, _id) => {
+    const actionModel = await Action.findById(_id)
+
+    // Find the authors associated with the exchange
+    const senderAuthor = actionModel.senderAuthor
+    const targetAuthor = actionModel.targetAuthor
+
+    // Remove the action from each author's actions array
+    Author.updateOne({ _id: senderAuthor }, { $pull: { actions: _id } })
+    Author.updateOne({ _id: targetAuthor }, { $pull: { actions: _id } })
+
+    // Delete the action itself from the database
+    Action.deleteOne({ _id })
 }
 
 module.exports = {
@@ -63,8 +146,10 @@ module.exports = {
     handleRequest,
     handleResponse,
     handleInputValidation,
-    handleFindAuthor,
-    handleFindAction,
-    handleFindBook,
-    handleFindScrap,
+    handleCreateAuthor,
+    handleMongoVerifyPassword,
+    handleMongoFilter,
+    deepDeleteAuthor,
+    deepDeleteBook,
+    deepDeleteScrap,
 }
