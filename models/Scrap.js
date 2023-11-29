@@ -1,7 +1,7 @@
 const mongoose = require('mongoose')
 const Schema = mongoose.Schema
 
-const scrap_schema = new Schema({
+const scrapSchema = new Schema({
     author: String,
     title: String,
     description: String,
@@ -17,9 +17,9 @@ const scrap_schema = new Schema({
     likes: [String],
     threads: [String],
 
-    created_at: Date,
+    createdAt: Date,
 })
 
-const Scrap = mongoose.model('Scrap', scrap_schema)
+const Scrap = mongoose.model('Scrap', scrapSchema)
 
 module.exports = Scrap

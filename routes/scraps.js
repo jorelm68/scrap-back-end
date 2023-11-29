@@ -1,22 +1,22 @@
 const express = require('express')
 const {
     exists,
-    save_scrap,
-    add_like,
-    remove_like,
-    add_thread,
-    remove_thread,
-} = require('../controllers/scrap_controller')
+    saveScrap,
+    addLike,
+    removeLike,
+    addThread,
+    removeThread,
+} = require('../controllers/scrapController')
 
 const router = express.Router()
 
 router.post('/exists', exists)
-router.post('/save_scrap', save_scrap)
+router.post('/saveScrap', saveScrap)
 
-router.patch('/add_like', add_like)
-router.patch('/remove_like', remove_like)
+router.patch('/addLike', addLike)
+router.patch('/removeLike', removeLike)
 
-router.patch('/add_thread', add_thread)
-router.patch('/remove_thread', remove_thread)
+router.patch('/addThread', addThread)
+router.patch('/removeThread', removeThread)
 
 module.exports = router

@@ -3,10 +3,10 @@ const express = require('express')
 const cors = require('cors')
 const multer = require('multer')
 const mongoose = require('mongoose')
-const author_routes = require('./routes/authors')
-const scrap_routes = require('./routes/scraps')
-const book_routes = require('./routes/books')
-const utility_routes = require('./routes/utility')
+const authorRoutes = require('./routes/authors')
+const scrapRoutes = require('./routes/scraps')
+const bookRoutes = require('./routes/books')
+const utilityRoutes = require('./routes/utility')
 
 // express app
 const app = express()
@@ -41,7 +41,7 @@ app.use((req, res, next) => {
 })
 
 // Middleware to process the API key
-const api_key_middleware = (req, res, next) => {
+const apiKeyMiddleware = (req, res, next) => {
     const apiKey = req.header('x-api-key')
 
     if (!apiKey || apiKey !== process.env.API_KEY) {
@@ -51,13 +51,13 @@ const api_key_middleware = (req, res, next) => {
     // API key is valid, continue to the next middleware or route handler
     next()
 }
-app.use('/api', api_key_middleware)
+app.use('/api', apiKeyMiddleware)
 
 // routes
-app.use('/api/authors', author_routes)
-app.use('api/scraps', scrap_routes)
-app.use('api/books', book_routes)
-app.use('api/utility', utility_routes)
+app.use('/api/authors', authorRoutes)
+app.use('api/scraps', scrapRoutes)
+app.use('api/books', bookRoutes)
+app.use('api/utility', utilityRoutes)
 
 // connect to db
 mongoose.connect(process.env.MONGO_URI)

@@ -1,20 +1,20 @@
 const mongoose = require('mongoose')
 const Schema = mongoose.Schema
 
-const action_schema = new Schema({
-    action_type: String,
+const actionSchema = new Schema({
+    actionType: String,
 
-    sender_author: String,
-    sender_book: String,
-    sender_scrap: String,
+    senderAuthor: String,
+    senderBook: String,
+    senderScrap: String,
 
-    target_author: String,
-    target_book: String,
-    target_scrap: String,
+    targetAuthor: String,
+    targetBook: String,
+    targetScrap: String,
 
-    created_at: Date,
+    createdAt: Date,
 })
 
-const Action = mongoose.model('Action', action_schema)
+const Action = mongoose.model('Action', actionSchema)
 
 module.exports = Action

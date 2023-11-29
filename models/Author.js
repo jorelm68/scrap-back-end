@@ -2,7 +2,7 @@ const mongoose = require('mongoose')
 const Schema = mongoose.Schema
 const bcrypt = require('bcrypt')
 
-const author_schema = new Schema({
+const authorSchema = new Schema({
     pseudonym: {
         type: String,
         unique: true,
@@ -21,32 +21,32 @@ const author_schema = new Schema({
     headshot: String,
     cover: String,
 
-    first_name: String,
-    last_name: String,
+    firstName: String,
+    lastName: String,
     autobiography: String,
 
     friends: [String],
-    incoming_friend_requests: [String],
-    outgoing_friend_requests: [String],
+    incomingFriendRequests: [String],
+    outgoingFriendRequests: [String],
 
     scraps: [String],
     books: [String],
-    book_contributions: [String],
+    bookContributions: [String],
 
-    liked_scraps: [String],
-    liked_books: [String],
+    likedScraps: [String],
+    likedBooks: [String],
 
     actions: [String],
 
-    push_token: String,
+    pushToken: String,
 
-    created_at: Date,
+    createdAt: Date,
 })
 
-author_schema.methods.comparePassword = async function (password) {
+authorSchema.methods.comparePassword = async function (password) {
     bcrypt.compare(password, this.password)
 }
 
-const Author = mongoose.model('Author', author_schema);
+const Author = mongoose.model('Author', authorSchema);
 
 module.exports = Author

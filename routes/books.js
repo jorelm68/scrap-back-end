@@ -1,25 +1,25 @@
 const express = require('express')
 const {
     exists,
-    save_book,
-    add_scrap,
-    remove_scrap,
-    remove_thread,
-    add_like,
-    remove_like,
-} = require('../controllers/book_controller')
+    saveBook,
+    addScrap,
+    removeScrap,
+    removeThread,
+    addLike,
+    removeLike,
+} = require('../controllers/bookController')
 
 const router = express.Router()
 
 router.post('/exists', exists)
-router.post('/save_book', save_book)
+router.post('/saveBook', saveBook)
 
-router.patch('/add_scrap', add_scrap)
-router.patch('/remove_scrap', remove_scrap)
+router.patch('/addScrap', addScrap)
+router.patch('/removeScrap', removeScrap)
 
-router.patch('/remove_thread', remove_thread)
+router.patch('/removeThread', removeThread)
 
-router.patch('/add_like', add_like)
-router.patch('/remove_like', remove_like)
+router.patch('/addLike', addLike)
+router.patch('/removeLike', removeLike)
 
 module.exports = router
