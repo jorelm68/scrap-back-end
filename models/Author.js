@@ -28,7 +28,6 @@ const author_schema = new Schema({
     friends: [String],
     incoming_friend_requests: [String],
     outgoing_friend_requests: [String],
-    blocked: [String],
 
     scraps: [String],
     books: [String],
