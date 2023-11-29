@@ -12,12 +12,13 @@ const scrap_schema = new Schema({
     longitude: Number,
 
     place: String,
+    location: String,
 
     likes: [String],
     threads: [String],
 
-    createdAt: Date,
-}, { timestamps: true })
+    created_at: Date,
+})
 
 const Scrap = mongoose.model('Scrap', scrap_schema)
 

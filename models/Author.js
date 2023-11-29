@@ -41,8 +41,8 @@ const author_schema = new Schema({
 
     push_token: String,
 
-    createdAt: Date,
-}, { timestamps: true })
+    created_at: Date,
+})
 
 author_schema.methods.comparePassword = async function (password) {
     bcrypt.compare(password, this.password)

@@ -23,8 +23,8 @@ const book_schema = new Schema({
         threads: [String],
     }],
 
-    createdAt: Date,
-}, { timestamps: true })
+    created_at: Date,
+})
 
 const Book = mongoose.model('Book', book_schema)
 

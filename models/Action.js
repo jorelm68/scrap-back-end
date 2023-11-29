@@ -12,8 +12,8 @@ const action_schema = new Schema({
     target_book: String,
     target_scrap: String,
 
-    createdAt: Date,
-}, { timestamps: true })
+    created_at: Date,
+})
 
 const Action = mongoose.model('Action', action_schema)
 
