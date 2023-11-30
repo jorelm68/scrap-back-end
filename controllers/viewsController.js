@@ -3,7 +3,6 @@ const mongoose = require('mongoose')
 const PasswordToken = require('../models/PasswordToken')
 const {
     handleRequest,
-    handleInputValidation,
 } = require('../other/handler')
 const { body, param, validationResult } = require('express-validator')
 
