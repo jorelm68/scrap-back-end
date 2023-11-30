@@ -284,8 +284,6 @@ const removeRequest = async (req, res) => {
                 userModel.save(),
                 authorModel.save(),
             ])
-            console.log(authorModel)
-            console.log(user)
             return handleError(res, 400, `You haven\'t yet sent a friend request to ${authorModel.pseudonym}`)
         }
 
@@ -413,8 +411,6 @@ const rejectRequest = async (req, res) => {
         if (!authorModel.outgoingFriendRequests.includes(user) || !userModel.incomingFriendRequests.includes(author)) {
             authorModel.outgoingFriendRequests.pull(user)
             userModel.incomingFriendRequests.pull(author)
-            authorModel.incomingFriendRequests.pull(user)
-            userModel.outgoingFriendRequests.pull(author)
             await Promise.all([
                 userModel.save(),
                 authorModel.save(),
