@@ -259,6 +259,24 @@ const removeRequest = async (req, res) => {
             return handleError(res, 400, `author: "${author}" doesn't exist`)
         }
 
+        if (userModel.friends.includes(author) || authorModel.friends.includes(user)) {
+            // Fix the database
+            userModel.friends.pull(author)
+            authorModel.friends.pull(user)
+            userModel.outgoingFriendRequests.pull(author)
+            userModel.incomingFriendRequests.pull(author)
+            authorModel.incomingFriendRequests.pull(user)
+            authorModel.outgoingFriendRequests.pull(user)
+            userModel.friends.push(author)
+            authorModel.friends.push(user)
+            
+            await Promise.all([
+                userModel.save(),
+                authorModel.save(),
+            ])
+            return handleError(res, 400, `You are already friends with ${authorModel.pseudonym}`)
+        }
+
         if (!userModel.outgoingFriendRequests.includes(author) || !authorModel.incomingFriendRequests.includes(user)) {
             userModel.outgoingFriendRequests.pull(author)
             authorModel.incomingFriendRequests.pull(user)
