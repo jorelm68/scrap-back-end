@@ -398,7 +398,6 @@ module.exports = {
     handleRequest,
     handleResponse,
     handleInputValidation,
-    handleCreateAuthor,
     handleAction,
     handleMongoVerifyPassword,
     handleMongoFilter,
