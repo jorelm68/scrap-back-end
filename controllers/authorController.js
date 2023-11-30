@@ -9,6 +9,7 @@ const Action = require('../models/Action')
 const {
     handleRequest,
     handleResponse,
+    handleCreateAuthor,
     handleInputValidation,
     handleMongoVerifyPassword,
 } = require('../handler')
@@ -51,13 +52,13 @@ const signUp = async (req, res) => {
         const { pseudonym, email, password, headshot, cover, firstName, lastName, pushToken, createdAt } = req.body
 
         // Check if the pseudonym is already taken
-        const existingPseudonym = await Author.findOne(pseudonym)
+        const existingPseudonym = await Author.findOne({ pseudonym })
         if (existingPseudonym) {
             return handleError(res, 400, 'Pseudonym is already taken')
         }
 
         // Check if email is already registered
-        const existingEmail = await Author.findOne(email)
+        const existingEmail = await Author.findOne({ email })
         if (existingEmail) {
             return handleError(res, 400, 'Email is already registered with another account')
         }
