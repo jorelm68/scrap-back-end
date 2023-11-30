@@ -4,9 +4,11 @@ const Author = require('../models/Author')
 const Book = require('../models/Book')
 const Scrap = require('../models/Scrap')
 const {
-    handleRequest, 
-    handleS3Put
+    handleRequest,
+    handleS3Put,
+    deepDeleteScrap
 } = require('../handler')
+const { body, validationResult } = require('express-validator')
 
 const exists = async (req, res) => {
     const code = async (req, res) => {
@@ -106,8 +108,28 @@ const saveScrap = async (req, res) => {
     }
     await handleRequest(req, res, code)
 }
+const deleteScraps = async (req, res) => {
+    const code = async (req, res) => {
+        await handleInputValidation(req, res, [
+            body('scraps').exists().withMessage('body: scrap is required'),
+        ], validationResult)
+
+        const { scraps } = req.body
+
+        // Deep delete each scrap
+        const deleteScraps = []
+        for (const scrap of scraps) {
+            deleteScraps.push(deepDeleteScrap(req, res, scrap))
+        }
+        await Promise.all(deleteScraps)
+
+        return handleResponse(res, { scraps })
+    }
+    await handleRequest(req, res, code)
+}
 
 module.exports = {
     exists,
     saveScrap,
+    deleteScraps,
 }

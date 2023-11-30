@@ -184,6 +184,21 @@ const handleMongoFilter = async (modelName, key, value) => {
         { $pull: { [key]: value } }
     )
 }
+const handleMongoGet = async (req, res, modelName, id, key) => {
+    const Model = mongoose.model(modelName)
+
+    const model = await Model.findOne({ _id: id }, { [key]: 1 })
+
+    if (!model) {
+        return handleError(res, 404, `${modelName} was not found in the database`)
+    }
+
+    if (!(key in model)) {
+        return handleError(res, 400, `${modelName} does not contain ${key}`)
+    }
+
+    return model[key]
+}
 
 const handleS3Put = async (key, body) => {
     await s3.putObject({
@@ -394,6 +409,7 @@ module.exports = {
     handleAction,
     handleMongoVerifyPassword,
     handleMongoFilter,
+    handleMongoGet,
     handleS3Put,
     handleS3Get,
     handleS3Delete,

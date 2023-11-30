@@ -7,8 +7,10 @@ const Scrap = require('../models/Scrap')
 const Action = require('../models/Action')
 const {
     handleRequest,
-    handleInputValidation
+    handleInputValidation,
+    deepDeleteBook
 } = require('../handler')
+const { validationResult } = require('express-validator')
 
 const exists = async (req, res) => {
     const code = async (req, res) => {
@@ -282,6 +284,26 @@ const removeLike = async (req, res) => {
     await handleRequest(req, res, code)
 }
 
+const deleteBooks = async (req, res) => {
+    const code = async (req, res) => {
+        await handleInputValidation(req, res, [
+            body('books').exists().withMessage('body: book is required'),
+        ], validationResult)
+
+        const { books } = req.body
+
+        // Deep delete each book
+        const deleteBooks = []
+        for (const book of books) {
+            deleteBooks.push(deepDeleteBook(req, res, book))
+        }
+        await Promise.all(deleteBooks)
+
+        return handleResponse(res, { books })
+    }
+    await handleRequest(req, res, code)
+}
+
 
 module.exports = {
     exists,
@@ -290,4 +312,5 @@ module.exports = {
     removeScrap,
     addLike,
     removeLike,
+    deleteBooks,
 }

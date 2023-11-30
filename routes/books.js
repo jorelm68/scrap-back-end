@@ -6,6 +6,7 @@ const {
     removeScrap,
     addLike,
     removeLike,
+    deleteBooks,
 } = require('../controllers/bookController')
 
 const router = express.Router()
@@ -18,5 +19,7 @@ router.patch('/removeScrap', removeScrap)
 
 router.patch('/addLike', addLike)
 router.patch('/removeLike', removeLike)
+
+router.patch('/deleteBooks', deleteBooks)
 
 module.exports = router
