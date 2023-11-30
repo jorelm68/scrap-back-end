@@ -22,7 +22,7 @@ const get = async (req, res) => {
         const { author, demands } = req.body
         const authorModel = await Author.findById(author)
         if (!authorModel) {
-            return handleError(res, 400, `author: ${author} doesn't exist`)
+            return handleError(res, 400, `author: "${author}" doesn't exist`)
         }
 
         let supply = []
@@ -31,7 +31,7 @@ const get = async (req, res) => {
             if (author) {
                 const authorModel = await Author.findById(author)
                 if (!authorModel) {
-                    return handleError(res, 400, `author: ${author} doesn't exist`)
+                    return handleError(res, 400, `author: "${author}" doesn't exist`)
                 }
 
                 for (const key of data) {
@@ -43,7 +43,7 @@ const get = async (req, res) => {
             else if (scrap) {
                 const scrapModel = await Scrap.findById(scrap)
                 if (!scrapModel) {
-                    return handleError(res, 400, `scrap: ${scrap} doesn't exist`)
+                    return handleError(res, 400, `scrap: "${scrap}" doesn't exist`)
                 }
 
                 for (const key of data) {
@@ -55,7 +55,7 @@ const get = async (req, res) => {
             else if (book) {
                 const bookModel = await Book.findById(book)
                 if (!bookModel) {
-                    return handleError(res, 400, `book: ${book} doesn't exist`)
+                    return handleError(res, 400, `book: "${book}" doesn't exist`)
                 }
 
                 for (const key of data) {
@@ -80,7 +80,7 @@ const set = async (req, res) => {
         const { author, demands } = req.body
         const authorModel = await Author.findById(author)
         if (!authorModel) {
-            return handleError(res, 400, `author: ${author} doesn't exist`)
+            return handleError(res, 400, `author: "${author}" doesn't exist`)
         }
 
         for (const demand of demands) {
@@ -88,7 +88,7 @@ const set = async (req, res) => {
             if (author) {
                 const authorModel = await Author.findById(author)
                 if (!authorModel) {
-                    return handleError(res, 400, `author: ${author} doesn't exist`)
+                    return handleError(res, 400, `author: "${author}" doesn't exist`)
                 }
                 for (const pair of demand) {
                     const { key, value } = pair
@@ -99,7 +99,7 @@ const set = async (req, res) => {
             else if (book) {
                 const bookModel = await Book.findById(book)
                 if (!bookModel) {
-                    return handleError(res, 400, `book: ${book} doesn't exist`)
+                    return handleError(res, 400, `book: "${book}" doesn't exist`)
                 }
                 for (const pair of demand) {
                     const { key, value } = pair
@@ -110,7 +110,7 @@ const set = async (req, res) => {
             else if (scrap) {
                 const scrapModel = await Scrap.findById(scrap)
                 if (!scrapModel) {
-                    return handleError(res, 400, `scrap: ${scrap} doesn't exist`)
+                    return handleError(res, 400, `scrap: "${scrap}" doesn't exist`)
                 }
                 for (const pair of demand) {
                     const { key, value } = pair
@@ -191,11 +191,11 @@ const addThread = async (req, res) => {
 
         const bookModel = await Book.findById(book)
         if (!bookModel) {
-            return handleError(res, 400, `book: ${book} doesn't exist`)
+            return handleError(res, 400, `book: "${book}" doesn't exist`)
         }
         const scrapModel = await Scrap.findById(scrap)
         if (!scrapModel) {
-            return handleError(res, 400, `scrap: ${scrap} doesn't exist`)
+            return handleError(res, 400, `scrap: "${scrap}" doesn't exist`)
         }
 
         // Check to see if the scrap already threads to the book
@@ -210,7 +210,7 @@ const addThread = async (req, res) => {
                 scrapModel.save(),
             ])
 
-            return handleError(res, 400, 'Specified scrap and book are alerady threaded')
+            return handleError(res, 400, `The scrap: "${scrapModel.title}" and the book: "${bookModel.title}" are alerady threaded`)
         }
 
         // Remove to refresh the thread from the scrap to the book
@@ -244,11 +244,11 @@ const removeThread = async (req, res) => {
 
         const bookModel = await Book.findById(book)
         if (!bookModel) {
-            return handleError(res, 400, `book: ${book} doesn't exist`)
+            return handleError(res, 400, `book: "${book}" doesn't exist`)
         }
         const scrapModel = await Scrap.findById(scrap)
         if (!scrapModel) {
-            return handleError(res, 400, `scrap: ${scrap} doesn't exist`)
+            return handleError(res, 400, `scrap: "${scrap}" doesn't exist`)
         }
 
         // Check to see if the scrap doesn't thread to the book
@@ -261,7 +261,7 @@ const removeThread = async (req, res) => {
                 scrapModel.save(),
             ])
 
-            return handleError(res, 400, 'Specified scrap and book were never threaded')
+            return handleError(res, 400, `The scrap: "${scrapModel.title}" and the book: "${bookModel.title}" were never threaded`)
         }
 
         // Remove the thread from the scrap to the book

@@ -217,7 +217,7 @@ const deepDeleteAuthor = async (req, res, _id) => {
     const authorModel = await Author.findById(_id)
 
     if (!authorModel) {
-        return handleError(res, 400, `Could not find author ${_id}`)
+        return handleError(res, 400, `Could not find author: "${_id}"`)
     }
 
     const scraps = authorModel.scraps
@@ -270,7 +270,7 @@ const deepDeleteBook = async (req, res, _id) => {
     const bookModel = await Book.findById(_id)
 
     if (!bookModel) {
-        return handleError(res, 400, `Could not find book ${_id}`)
+        return handleError(res, 400, `Could not find book: "${_id}"`)
     }
 
     // Delete any action from any author that references the book id
@@ -303,7 +303,7 @@ const deepDeleteScrap = async (req, res, _id) => {
     const scrapModel = await Scrap.findById(_id)
 
     if (!scrapModel) {
-        return handleError(res, 400, `Could not find scrap ${_id}`)
+        return handleError(res, 400, `Could not find scrap: "${_id}"`)
     }
 
     // Deep delete all actions associated with the scrap
@@ -315,7 +315,7 @@ const deepDeleteScrap = async (req, res, _id) => {
             { targetScrap: _id }
         ]
     }, '_id');
-    
+
     for (const action of actions) {
         deleteActions.push(deepDeleteAction(req, res, action))
     }
@@ -359,7 +359,7 @@ const deepDeleteScrap = async (req, res, _id) => {
 const deepDeleteAction = async (req, res, _id) => {
     const actionModel = await Action.findById(_id)
     if (!actionModel) {
-        return handleError(res, 400, `Could not find action ${_id}`)
+        return handleError(res, 400, `Could not find action: "${_id}"`)
     }
 
     // Find the authors associated with the exchange

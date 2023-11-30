@@ -110,11 +110,11 @@ const addScrap = async (req, res) => {
 
         const bookModel = await Book.findById(book)
         if (!bookModel) {
-            return handleError(res, 400, `book: ${book} doesn't exist`)
+            return handleError(res, 400, `book: "${book}" doesn't exist`)
         }
         const scrapModel = await Scrap.findById(scrap)
         if (!scrapModel) {
-            return handleError(res, 400, `scrap: ${scrap} doesn't exist`)
+            return handleError(res, 400, `scrap: "${scrap}" doesn't exist`)
         }
 
         // Add the scrap's id to the book's scraps array
@@ -148,11 +148,11 @@ const removeScrap = async (req, res) => {
 
         const bookModel = Book.findById(book)
         if (!bookModel) {
-            return handleError(res, 400, `book: ${book} doesn't exist`)
+            return handleError(res, 400, `book: "${book}" doesn't exist`)
         }
         const scrapModel = Scrap.findById(scrap)
         if (!scrapModel) {
-            return handleError(res, 400, `scrap: ${scrap} doesn't exist`)
+            return handleError(res, 400, `scrap: "${scrap}" doesn't exist`)
         }
 
         if (!bookModel.scraps.includes(scrap) || !scrapModel.book === book) {
@@ -162,7 +162,7 @@ const removeScrap = async (req, res) => {
                 bookModel.save(),
                 scrapModel.save(),
             ])
-            return handleError(res, 400, 'Scrap does not belong to that book')
+            return handleError(res, 400, `The scrap: "${scrapModel.title}" doesn't belong to the book: "${bookModel.title}"`)
         }
 
         // Remove the scrap's id from the book's scraps array
@@ -185,53 +185,53 @@ const addLike = async (req, res) => {
     const code = async (req, res) => {
         // Apply input validation and sanitization rules
         await handleInputValidation(req, res, [
-            body('user').exists().withMessage('body: user is required'),
-            body('user').isMongoId().withMessage('body: user must be MongoId'),
+            body('author').exists().withMessage('body: author is required'),
+            body('author').isMongoId().withMessage('body: author must be MongoId'),
             body('book').exists().withMessage('body: book is required'),
             body('book').isMongoId().withMessage('body: book must be MongoId'),
         ], validationResult)
 
-        const { user, book } = req.body
+        const { author, book } = req.body
 
-        const userModel = await Author.findById(user)
-        if (!userModel) {
-            return handleError(res, 400, `user: ${user} doesn't exist`)
+        const authorModel = await Author.findById(author)
+        if (!authorModel) {
+            return handleError(res, 400, `user: "${author}" doesn't exist`)
         }
         const bookModel = await Book.findById(book)
         if (!bookModel) {
-            return handleError(res, 400, `book: ${book} doesn't exist`)
+            return handleError(res, 400, `book: "${book}" doesn't exist`)
         }
 
         // Check to see if the book is already liked by that person
-        if (bookModel.likes.includes(user) || userModel.likedBooks.includes(book)) {
-            bookModel.likes.pull(user)
-            userModel.likedBooks.pull(book)
+        if (bookModel.likes.includes(author) || authorModel.likedBooks.includes(book)) {
+            bookModel.likes.pull(author)
+            authorModel.likedBooks.pull(book)
 
-            bookModel.likes.push(user)
-            userModel.likedBooks.push(book)
+            bookModel.likes.push(author)
+            authorModel.likedBooks.push(book)
 
             await Promise.all([
                 bookModel.save(),
-                userModel.save(),
+                authorModel.save(),
             ])
 
-            return handleError(res, 400, 'User already liked that book')
+            return handleError(res, 400, `${authorModel.pseudonym} already liked the book: "${bookModel.title}"`)
         }
 
         // Refresh the array
-        bookModel.likes.pull(user)
-        userModel.likedBooks.pull(book)
+        bookModel.likes.pull(author)
+        authorModel.likedBooks.pull(book)
 
         // Add the like
-        bookModel.likes.push(user)
-        userModel.likedBooks.push(book)
+        bookModel.likes.push(author)
+        authorModel.likedBooks.push(book)
 
         await Promise.all([
             bookModel.save(),
-            userModel.save(),
+            authorModel.save(),
         ])
 
-        return handleResponse(res, { user, book })
+        return handleResponse(res, { user: author, book })
     }
     await handleRequest(req, res, code)
 }
@@ -240,46 +240,46 @@ const removeLike = async (req, res) => {
     const code = async (req, res) => {
         // Apply input validation and sanitization rules
         await handleInputValidation(req, res, [
-            body('user').exists().withMessage('body: user is required'),
-            body('user').isMongoId().withMessage('body: user must be MongoId'),
+            body('author').exists().withMessage('body: author is required'),
+            body('author').isMongoId().withMessage('body: author must be MongoId'),
             body('book').exists().withMessage('body: book is required'),
             body('book').isMongoId().withMessage('body: book must be MongoId'),
         ], validationResult)
 
-        const { user, book } = req.body
+        const { author, book } = req.body
 
-        const userModel = await Author.findById(user)
-        if (!userModel) {
-            return handleError(res, 400, `user: ${user} doesn't exist`)
+        const authorModel = await Author.findById(author)
+        if (!authorModel) {
+            return handleError(res, 400, `user: "${author}" doesn't exist`)
         }
         const bookModel = await Book.findById(book)
         if (!bookModel) {
-            return handleError(res, 400, `book: ${book} doesn't exist`)
+            return handleError(res, 400, `book: "${book}" doesn't exist`)
         }
 
         // Check to see if the book isn't already liked by that person
-        if (!bookModel.likes.includes(user) || !userModel.likedBooks.includes(book)) {
-            bookModel.likes.pull(user)
-            userModel.likedBooks.pull(book)
+        if (!bookModel.likes.includes(author) || !authorModel.likedBooks.includes(book)) {
+            bookModel.likes.pull(author)
+            authorModel.likedBooks.pull(book)
 
             await Promise.all([
                 bookModel.save(),
-                userModel.save(),
+                authorModel.save(),
             ])
 
-            return handleError(res, 400, 'User never liked that book')
+            return handleError(res, 400, `${authorModel.pseudonym} never liked the book: "${bookModel.title}"`)
         }
 
         // Remove the book like association from the arrays
-        bookModel.likes.pull(user)
-        userModel.likedBooks.pull(book)
+        bookModel.likes.pull(author)
+        authorModel.likedBooks.pull(book)
 
         await Promise.all([
             bookModel.save(),
-            userModel.save(),
+            authorModel.save(),
         ])
 
-        return handleResponse(res, { user, book })
+        return handleResponse(res, { user: author, book })
     }
     await handleRequest(req, res, code)
 }

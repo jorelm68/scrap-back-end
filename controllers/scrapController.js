@@ -68,7 +68,7 @@ const saveScrap = async (req, res) => {
 
         const authorModel = await Author.findById(author)
         if (!authorModel) {
-            return handleError(res, 400, `author: ${author} doesn't exist`)
+            return handleError(res, 400, `author: "${author}" doesn't exist`)
         }
 
         // Create the document in MongoDB
