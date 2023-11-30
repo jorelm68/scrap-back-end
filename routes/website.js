@@ -1,13 +1,15 @@
 const express = require('express')
 const path = require('path')
+const {
+    resetPassword,
+    privacyPolicy,
+    homePage,
+} = require('../controllers/viewsController')
 
 const router = express.Router()
 
-router.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, '../pages', 'homePage.html'))
-})
-router.get('/privacyPolicy', (req, res) => {
-    res.sendFile(path.join(__dirname, '../pages', 'privacyPolicy.html'))
-})
+router.get('/', homePage)
+router.get('/privacyPolicy', privacyPolicy)
+router.get('/resetPassword/:passwordToken', resetPassword)
 
 module.exports = router

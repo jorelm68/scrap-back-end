@@ -1,4 +1,5 @@
 require('dotenv').config()
+const path = require('path')
 const express = require('express')
 const cors = require('cors')
 const multer = require('multer')
@@ -11,6 +12,8 @@ const websiteRoutes = require('./routes/website')
 
 // express app
 const app = express()
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'))
 
 // CORS
 app.use(cors())

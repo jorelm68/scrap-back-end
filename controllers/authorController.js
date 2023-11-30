@@ -1,10 +1,13 @@
 require('dotenv').config()
+const ejs = require('ejs')
+const fs = require('fs')
 const mongoose = require('mongoose')
 const bcrypt = require('bcrypt')
 const Author = require('../models/Author')
 const Book = require('../models/Book')
 const Scrap = require('../models/Scrap')
 const Action = require('../models/Action')
+const PasswordToken = require('../models/PasswordToken')
 const {
     handleRequest,
     handleError,
@@ -15,9 +18,6 @@ const {
     handleAction,
     sendEmail,
 } = require('../other/handler')
-const {
-    resetPassword,
-} = require('../other/emails')
 const { body, param, validationResult } = require('express-validator')
 const saltRounds = 10
 
@@ -198,10 +198,23 @@ const forgotPassword = async (req, res) => {
             return handleError(res, 400, `email: "${email}" isn't associated with an account`)
         }
 
-        // Send this HTML to the person who requested to change their password
-        console.log(process.cwd())
-        const htmlContent = resetPassword(authorModel.firstName)
+        // Create a PasswordToken that expires in 10 minutes
+        const currentTime = new Date();
+        const tenMinutesLater = new Date(currentTime.getTime() + 10 * 60 * 1000);
 
+        const passwordToken = new PasswordToken({
+            email,
+
+            createdAt: currentTime,
+            expirationDate: tenMinutesLater,
+        })
+        await passwordToken.save()
+
+        // Read the EJS template file
+        const templatePath = 'views/emailResetPassword.ejs'; // Replace with your EJS file path
+        const templateContent = fs.readFileSync(templatePath, 'utf8');
+
+        const htmlContent = ejs.render(templateContent, { firstName: authorModel.firstName, passwordToken: passwordToken._id })
         await sendEmail(req, res, email, 'Reset Password', htmlContent)
 
         return handleResponse(res, { author: authorModel._id, email })
