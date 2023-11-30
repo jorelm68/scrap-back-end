@@ -21,23 +21,7 @@ const saveScrap = async (req, res) => {
     await handleRequest(req, res, code)
 }
 
- const addThread = async (req, res) => {
-    const code = async (req, res) => {
-
-    }
-    await handleRequest(req, res, code)
- }
-
- const removeThread = async (req, res) => {
-    const code = async (req, res) => {
-
-    }
-    await handleRequest(req, res, code)
- }
-
 module.exports = {
     exists,
     saveScrap,
-    addThread,
-    removeThread,
 }

@@ -11,13 +11,9 @@ const bookSchema = new Schema({
     startDate: Date,
     endDate: Date,
 
-    latitude: Number,
-    longitude: Number,
+    center: String,
 
-    invites: [String],
     likes: [String],
-    threads: [String],
-
     scraps: [String],
 
     createdAt: Date,

@@ -4,7 +4,6 @@ const {
     saveBook,
     addScrap,
     removeScrap,
-    removeThread,
     addLike,
     removeLike,
 } = require('../controllers/bookController')
@@ -16,8 +15,6 @@ router.post('/saveBook', saveBook)
 
 router.patch('/addScrap', addScrap)
 router.patch('/removeScrap', removeScrap)
-
-router.patch('/removeThread', removeThread)
 
 router.patch('/addLike', addLike)
 router.patch('/removeLike', removeLike)

@@ -48,7 +48,7 @@ const signUp = async (req, res) => {
             body('password').exists().withMessage('body: password is required')
         ], validationResult)
 
-        const { pseudonym, email, password, headshot, cover, firstName, lastName, pushToken } = req.body
+        const { pseudonym, email, password, headshot, cover, firstName, lastName, pushToken, createdAt } = req.body
 
         // Check if the pseudonym is already taken
         const existingPseudonym = await Author.findOne(pseudonym)
@@ -77,6 +77,8 @@ const signUp = async (req, res) => {
             lastName,
 
             pushToken,
+
+            createdAt: createdAt ? createdAt : new Date()
         })
 
         return handleResponse(res, { user: user_id })
