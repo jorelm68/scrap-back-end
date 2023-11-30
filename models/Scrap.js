@@ -12,7 +12,7 @@ const scrapSchema = new Schema({
     longitude: Number,
 
     place: String,
-    location: String,
+    location: String, // Formatted reverse geocode result
 
     likes: [String],
     threads: [String],
