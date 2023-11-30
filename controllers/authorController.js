@@ -218,8 +218,8 @@ const sendRequest = async (req, res) => {
         userModel.outgoingFriendRequests.push(author)
 
         // Add the user to the author's received array
-        authorModel.incomingFriendRequests.pull(author)
-        authorModel.incomingFriendRequests.push(author)
+        authorModel.incomingFriendRequests.pull(user)
+        authorModel.incomingFriendRequests.push(user)
 
         await Promise.all([
             userModel.save(),
@@ -284,6 +284,8 @@ const removeRequest = async (req, res) => {
                 userModel.save(),
                 authorModel.save(),
             ])
+            console.log(authorModel)
+            console.log(user)
             return handleError(res, 400, `You haven\'t yet sent a friend request to ${authorModel.pseudonym}`)
         }
 
