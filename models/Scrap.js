@@ -16,6 +16,7 @@ const scrapSchema = new Schema({
 
     likes: [String],
     threads: [String],
+    book: String,
 
     createdAt: Date,
 })

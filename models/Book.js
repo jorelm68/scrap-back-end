@@ -18,10 +18,7 @@ const bookSchema = new Schema({
     likes: [String],
     threads: [String],
 
-    scraps: [{
-        scrap: String,
-        threads: [String],
-    }],
+    scraps: [String],
 
     createdAt: Date,
 })
