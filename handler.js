@@ -1,4 +1,5 @@
 const mongoose = require('mongoose')
+const nodemailer = require('nodemailer')
 const Author = require('./models/Author')
 const Action = require('./models/Action')
 const Book = require('./models/Book')
@@ -281,7 +282,7 @@ const deepDeleteBook = async (req, res, _id) => {
             { targetBook: _id }
         ]
     }, '_id');
-    
+
     for (const action of actions) {
         deleteActions.push(deepDeleteAction(req, res, action))
     }
@@ -374,6 +375,40 @@ const deepDeleteAction = async (req, res, _id) => {
     Action.deleteOne({ _id })
 }
 
+const sendEmail = async (req, res, email, subject, body) => {
+    try {
+        // Create a transporter using SMTP settings
+        let transporter = nodemailer.createTransport({
+            service: process.env.EMAIL_SERVICE,
+            auth: {
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_APP_PASSWORD
+            }
+        })
+
+        // Email content
+        let mailOptions = {
+            from: process.env.EMAIL,
+            to: email,
+            subject: subject,
+            text: body,
+            // You can add HTML content as well by using the `html` key
+            // html: '<p>Your password was successfully changed...</p>'
+        };
+
+        // Send email
+        transporter.sendMail(mailOptions, function (error, info) {
+            if (error) {
+                return handleError(res, 400, `Error sending email: ${error}`)
+            } else {
+                return true
+            }
+        })
+    } catch (error) {
+        return handleError(res, 400, error)
+    }
+}
+
 module.exports = {
     handleError,
     handleRequest,
@@ -389,4 +424,5 @@ module.exports = {
     deepDeleteAuthor,
     deepDeleteBook,
     deepDeleteScrap,
+    sendEmail,
 }

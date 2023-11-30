@@ -14,6 +14,7 @@ const {
     handleMongoVerifyPassword,
     deepDeleteAuthor,
     handleAction,
+    sendEmail,
 } = require('../handler')
 const { body, param, validationResult } = require('express-validator')
 const saltRounds = 10
@@ -187,7 +188,7 @@ const forgotPassword = async (req, res) => {
     const code = async (req, res) => {
         await handleInputValidation(req, res, [
             body('email').exists().withMessage('body: email is required'),
-        ])
+        ], validationResult)
 
         const { email } = req.body
         const authorModel = await Author.findOne({ email })
@@ -196,6 +197,7 @@ const forgotPassword = async (req, res) => {
         }
 
         // Find a way to send an email to someone
+        await sendEmail(req, res, email, 'Forgotten Password', 'You requested to change your password!')
 
         return handleResponse(res, { author: authorModel._id, email })
     }
