@@ -44,7 +44,7 @@ const authorSchema = new Schema({
 })
 
 authorSchema.methods.comparePassword = async function (password) {
-    bcrypt.compare(password, this.password)
+    return bcrypt.compare(password, this.password)
 }
 
 const Author = mongoose.model('Author', authorSchema);

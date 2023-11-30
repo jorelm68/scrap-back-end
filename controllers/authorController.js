@@ -8,6 +8,7 @@ const Scrap = require('../models/Scrap')
 const Action = require('../models/Action')
 const {
     handleRequest,
+    handleError,
     handleResponse,
     handleCreateAuthor,
     handleInputValidation,
