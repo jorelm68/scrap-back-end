@@ -278,6 +278,13 @@ const removeThread = async (req, res) => {
     await handleRequest(req, res, code)
 }
 
+const question = async (req, res) => {
+    const code = async (req, res) => {
+
+    }
+    await handleRequest(req, res, code)
+}
+
 module.exports = {
     get,
     getPhoto,
@@ -289,4 +296,5 @@ module.exports = {
     generalSearch,
     addThread,
     removeThread,
+    question,
 }

@@ -7,6 +7,7 @@ const {
     scrapSearch,
     bookSearch,
     generalSearch,
+    question,
 } = require('../controllers/utilityController')
 
 const router = express.Router()
