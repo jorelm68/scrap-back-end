@@ -1,9 +1,9 @@
 const mongoose = require('mongoose')
 const nodemailer = require('nodemailer')
-const Author = require('./models/Author')
-const Action = require('./models/Action')
-const Book = require('./models/Book')
-const Scrap = require('./models/Scrap')
+const Author = require('../models/Author')
+const Action = require('../models/Action')
+const Book = require('../models/Book')
+const Scrap = require('../models/Scrap')
 const AWS = require('aws-sdk')
 const sharp = require('sharp')
 const bucketName = process.env.BUCKET_NAME
@@ -375,7 +375,7 @@ const deepDeleteAction = async (req, res, _id) => {
     Action.deleteOne({ _id })
 }
 
-const sendEmail = async (req, res, email, subject, body) => {
+const sendEmail = async (req, res, email, subject, html) => {
     try {
         // Create a transporter using SMTP settings
         let transporter = nodemailer.createTransport({
@@ -391,9 +391,7 @@ const sendEmail = async (req, res, email, subject, body) => {
             from: process.env.EMAIL,
             to: email,
             subject: subject,
-            text: body,
-            // You can add HTML content as well by using the `html` key
-            // html: '<p>Your password was successfully changed...</p>'
+            html: html,
         };
 
         // Send email

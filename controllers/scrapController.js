@@ -7,7 +7,7 @@ const {
     handleRequest,
     handleS3Put,
     deepDeleteScrap
-} = require('../handler')
+} = require('../other/handler')
 const { body, validationResult } = require('express-validator')
 
 const exists = async (req, res) => {

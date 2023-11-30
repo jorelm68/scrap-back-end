@@ -9,7 +9,7 @@ const {
     handleMongoGet,
     handleError,
     handleS3Get,
-} = require('../handler')
+} = require('../other/handler')
 
 const get = async (req, res) => {
     const code = async (req, res) => {

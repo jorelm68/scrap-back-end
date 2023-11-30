@@ -9,7 +9,7 @@ const {
     handleRequest,
     handleInputValidation,
     deepDeleteBook
-} = require('../handler')
+} = require('../other/handler')
 const { validationResult } = require('express-validator')
 
 const exists = async (req, res) => {

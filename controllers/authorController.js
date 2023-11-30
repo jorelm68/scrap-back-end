@@ -1,6 +1,5 @@
 require('dotenv').config()
 const mongoose = require('mongoose')
-const fs = require('fs')
 const bcrypt = require('bcrypt')
 const Author = require('../models/Author')
 const Book = require('../models/Book')
@@ -15,7 +14,10 @@ const {
     deepDeleteAuthor,
     handleAction,
     sendEmail,
-} = require('../handler')
+} = require('../other/handler')
+const {
+    resetPassword,
+} = require('../other/emails')
 const { body, param, validationResult } = require('express-validator')
 const saltRounds = 10
 
@@ -196,8 +198,11 @@ const forgotPassword = async (req, res) => {
             return handleError(res, 400, `email: "${email}" isn't associated with an account`)
         }
 
-        // Find a way to send an email to someone
-        await sendEmail(req, res, email, 'Forgotten Password', 'You requested to change your password!')
+        // Send this HTML to the person who requested to change their password
+        console.log(process.cwd())
+        const htmlContent = resetPassword(authorModel.firstName)
+
+        await sendEmail(req, res, email, 'Reset Password', htmlContent)
 
         return handleResponse(res, { author: authorModel._id, email })
     }
