@@ -199,6 +199,20 @@ const sendRequest = async (req, res) => {
             return handleError(res, 400, `You are already friends with ${authorModel.pseudonym}`)
         }
 
+        if (userModel.outgoingFriendRequests.includes(author) || authorModel.incomingFriendRequests.includes(user)) {
+            // Make sure the arrays are correct
+            userModel.outgoingFriendRequests.pull(author)
+            authorModel.incomingFriendRequests.pull(user)
+            userModel.outgoingFriendRequests.push(author)
+            authorModel.incomingFriendRequests.push(user)
+
+            await Promise.all([
+                userModel.save(),
+                authorModel.save(),
+            ])
+            return handleError(res, 400, `You already sent a friend request to ${authorModel.pseudonym}`)
+        }
+
         // Add the author to user's sent array
         userModel.outgoingFriendRequests.pull(author)
         userModel.outgoingFriendRequests.push(author)
