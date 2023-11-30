@@ -224,19 +224,12 @@ const deepDeleteAuthor = async (req, res, _id) => {
     const books = authorModel.books
 
     // Find all actions that reference the author
-    let actions = []
-    Action.find({
+    const actions = await Action.find({
         $or: [
             { senderAuthor: _id },
             { targetAuthor: _id }
         ]
-    }, '_id', (err, action_ids) => {
-        if (err) {
-            handleError(res, 400, `Error finding actions associated with ${authorModel.pseudonym}`)
-        } else {
-            actions = action_ids
-        }
-    });
+    }, '_id');
 
     // Delete any Action from any author that references the author
     const deleteActions = []
@@ -282,19 +275,13 @@ const deepDeleteBook = async (req, res, _id) => {
 
     // Delete any action from any author that references the book id
     const deleteActions = []
-    let actions = []
-    Action.find({
+    const actions = await Action.find({
         $or: [
             { senderBook: _id },
             { targetBook: _id }
         ]
-    }, '_id', (err, action_ids) => {
-        if (err) {
-            handleError(res, 400, `Error finding actions associated with ${bookModel.title}`)
-        } else {
-            actions = action_ids
-        }
-    });
+    }, '_id');
+    
     for (const action of actions) {
         deleteActions.push(deepDeleteAction(req, res, action))
     }
@@ -322,19 +309,13 @@ const deepDeleteScrap = async (req, res, _id) => {
     // Deep delete all actions associated with the scrap
     // Delete any action from any author that references the book id
     const deleteActions = []
-    let actions = []
-    Action.find({
+    const actions = await Action.find({
         $or: [
             { senderScrap: _id },
             { targetScrap: _id }
         ]
-    }, '_id', (err, action_ids) => {
-        if (err) {
-            handleError(res, 400, `Error finding actions associated with ${bookModel.title}`)
-        } else {
-            actions = action_ids
-        }
-    });
+    }, '_id');
+    
     for (const action of actions) {
         deleteActions.push(deepDeleteAction(req, res, action))
     }
