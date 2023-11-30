@@ -7,6 +7,7 @@ const authorRoutes = require('./routes/authors')
 const scrapRoutes = require('./routes/scraps')
 const bookRoutes = require('./routes/books')
 const utilityRoutes = require('./routes/utility')
+const websiteRoutes = require('./routes/website')
 
 // express app
 const app = express()
@@ -55,9 +56,10 @@ app.use('/api', apiKeyMiddleware)
 
 // routes
 app.use('/api/authors', authorRoutes)
-app.use('api/scraps', scrapRoutes)
-app.use('api/books', bookRoutes)
-app.use('api/utility', utilityRoutes)
+app.use('/api/scraps', scrapRoutes)
+app.use('/api/books', bookRoutes)
+app.use('/api/utility', utilityRoutes)
+app.use('/', websiteRoutes)
 
 // connect to db
 mongoose.connect(process.env.MONGO_URI)
