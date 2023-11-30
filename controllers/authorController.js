@@ -10,7 +10,6 @@ const {
     handleRequest,
     handleError,
     handleResponse,
-    handleCreateAuthor,
     handleInputValidation,
     handleMongoVerifyPassword,
 } = require('../handler')
@@ -67,7 +66,7 @@ const signUp = async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, saltRounds)
 
         // Create a new author document in MongoDB
-        const user_id = await handleCreateAuthor({
+        const authorModel = await Author.create({
             pseudonym,
             email,
             password: hashedPassword,
@@ -82,8 +81,9 @@ const signUp = async (req, res) => {
 
             createdAt: createdAt ? createdAt : new Date()
         })
+        await authorModel.save()
 
-        return handleResponse(res, { user: user_id })
+        return handleResponse(res, { author: authorModel._id })
     }
     await handleRequest(req, res, code)
 }

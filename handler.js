@@ -45,13 +45,6 @@ const handleInputValidation = async (req, res, checks, validationResult) => {
     }
 }
 
-const handleCreateAuthor = async (author) => {
-    const authorModel = await Author.create(author)
-    await authorModel.save()
-
-    return authorModel._id
-}
-
 const handleAction = async (req, res, action) => {
     const {
         actionType,
