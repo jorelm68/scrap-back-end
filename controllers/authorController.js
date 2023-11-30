@@ -16,6 +16,7 @@ const {
     handleAction,
 } = require('../handler')
 const { body, param, validationResult } = require('express-validator')
+const saltRounds = 10
 
 const exists = async (req, res) => {
     const code = async (req, res) => {
@@ -65,7 +66,7 @@ const signUp = async (req, res) => {
             return handleError(res, 400, 'That email is already registered with another account')
         }
 
-        const hashedPassword = await bcrypt.hash(password, process.env.SALT_ROUNDS)
+        const hashedPassword = await bcrypt.hash(password, saltRounds)
 
         // Create a new author document in MongoDB
         const authorModel = await Author.create({
@@ -162,18 +163,18 @@ const changePassword = async (req, res) => {
         await handleInputValidation(req, res, [
             body('author').exists().withMessage('body: author is required'),
             body('author').isMongoId().withMessage('body: author must be MongoId'),
-            body('password').exists().withMessage('body: password is required'),
+            body('currentPassword').exists().withMessage('body: currentPassword is required'),
+            body('newPassword').exists().withMessage('body: newPassword is required'),
         ], validationResult)
 
-        const { author, password } = req.body
+        const { author, currentPassword, newPassword } = req.body
 
-
-        const correct = await handleMongoVerifyPassword(author, password)
+        const correct = await handleMongoVerifyPassword(author, currentPassword)
         if (!correct) {
             return handleError(res, 400, `Invalid credentials`)
         }
 
-        const hashedPassword = await bcrypt.hash(password, process.env.SALT_ROUNDS)
+        const hashedPassword = await bcrypt.hash(newPassword, saltRounds)
         const authorModel = await Author.findById(author)
         authorModel.password = hashedPassword
         await authorModel.save()
