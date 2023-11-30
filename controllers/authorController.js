@@ -139,20 +139,20 @@ const checkCredentials = async (req, res) => {
     const code = async (req, res) => {
         // Apply input validation and sanitization rules
         await handleInputValidation(req, res, [
-            body('user').exists().withMessage('body: user is required'),
-            body('user').isMongoId().withMessage('body: user must be a MongoID'),
+            body('author').exists().withMessage('body: author is required'),
+            body('author').isMongoId().withMessage('body: author must be a MongoID'),
             body('password').exists().withMessage('body: password is required'),
-        ])
+        ], validationResult)
 
-        const { user, password } = req.body
+        const { author, password } = req.body
 
         // Perform password verification
-        const correct = await handleMongoVerifyPassword(user, password)
+        const correct = await handleMongoVerifyPassword(author, password)
 
         if (!correct) {
             return handleError(res, 400, 'Invalid credentials')
         }
-        return handleResponse(res, { user })
+        return handleResponse(res, { author })
     }
     await handleRequest(req, res, code)
 }
