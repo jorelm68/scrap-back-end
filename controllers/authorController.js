@@ -408,7 +408,23 @@ const rejectRequest = async (req, res) => {
         if (!authorModel) {
             return handleError(res, 400, `author: "${author}" doesn't exist`)
         }
-        if (!authorModel.outgoingFriendRequests.includes(user) || !userModel.incomingFriendRequests.includes(author)) {
+
+        if (userModel.friends.includes(author) || authorModel.friends.includes(user)) {
+            userModel.outgoingFriendRequests.pull(author)
+            userModel.incomingFriendRequests.pull(author)
+            authorModel.outgoingFriendRequests.pull(user)
+            authorModel.incomingFriendRequests.pull(user)
+            userModel.friends.pull(author)
+            authorModel.friends.pull(user)
+            userModel.friends.push(author)
+            authorModel.friends.push(user)
+            await Promise.all([
+                authorModel.save(),
+                userModel.save(),
+            ])
+            return handleError(res, 400, `You are already friends with ${authorModel.pseudonym}`)
+        }
+        else if (!authorModel.outgoingFriendRequests.includes(user) || !userModel.incomingFriendRequests.includes(author)) {
             authorModel.outgoingFriendRequests.pull(user)
             userModel.incomingFriendRequests.pull(author)
             await Promise.all([
