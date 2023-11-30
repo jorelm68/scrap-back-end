@@ -333,16 +333,7 @@ const acceptRequest = async (req, res) => {
             return handleError(res, 400, `author: "${author}" doesn't exist`)
         }
 
-        if (!userModel.incomingFriendRequests.includes(author) || !authorModel.outgoingFriendRequests.includes(user)) {
-            userModel.incomingFriendRequests.pull(author)
-            authorModel.outgoingFriendRequests.pull(user)
-            await Promise.all([
-                userModel.save(),
-                authorModel.save(),
-            ])
-            return handleError(res, 400, `${authorModel.pseudonym} hasn\'t yet sent you a friend request`)
-        }
-        else if (userModel.friends.includes(author) || authorModel.friends.includes(user)) {
+        if (userModel.friends.includes(author) || authorModel.friends.includes(user)) {
             userModel.outgoingFriendRequests.pull(author)
             userModel.incomingFriendRequests.pull(author)
             authorModel.outgoingFriendRequests.pull(user)
@@ -356,6 +347,15 @@ const acceptRequest = async (req, res) => {
                 userModel.save(),
             ])
             return handleError(res, 400, `You are already friends with ${authorModel.pseudonym}`)
+        }
+        else if (!userModel.incomingFriendRequests.includes(author) || !authorModel.outgoingFriendRequests.includes(user)) {
+            userModel.incomingFriendRequests.pull(author)
+            authorModel.outgoingFriendRequests.pull(user)
+            await Promise.all([
+                userModel.save(),
+                authorModel.save(),
+            ])
+            return handleError(res, 400, `${authorModel.pseudonym} hasn\'t yet sent you a friend request`)
         }
 
         // Remove the user from the author's sent array
