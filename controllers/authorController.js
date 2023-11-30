@@ -12,6 +12,7 @@ const {
     handleResponse,
     handleInputValidation,
     handleMongoVerifyPassword,
+    deepDeleteAuthor,
 } = require('../handler')
 const { body, param, validationResult } = require('express-validator')
 const saltRounds = 10
