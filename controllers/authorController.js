@@ -22,16 +22,17 @@ const exists = async (req, res) => {
         // Apply input validation and sanitization rules
         await handleInputValidation(req, res, [
             body('author').exists().withMessage('body: author is required'),
+            body('author').isMongoId().withMessage('body: author must be MongoId'),
         ], validationResult)
 
-        const { user } = req.body
+        const { author } = req.body
 
         let exists = false;
 
         // Check if the user exists
         try {
-            const author = await Author.findById(user)
-            if (author) {
+            const authorModel = await Author.findById(author)
+            if (authorModel) {
                 exists = true
             }
         } catch (error) {
