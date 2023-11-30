@@ -16,7 +16,6 @@ const {
     handleAction,
 } = require('../handler')
 const { body, param, validationResult } = require('express-validator')
-const saltRounds = 10
 
 const exists = async (req, res) => {
     const code = async (req, res) => {
@@ -66,7 +65,7 @@ const signUp = async (req, res) => {
             return handleError(res, 400, 'That email is already registered with another account')
         }
 
-        const hashedPassword = await bcrypt.hash(password, saltRounds)
+        const hashedPassword = await bcrypt.hash(password, process.env.SALT_ROUNDS)
 
         // Create a new author document in MongoDB
         const authorModel = await Author.create({
@@ -158,6 +157,50 @@ const checkCredentials = async (req, res) => {
     }
     await handleRequest(req, res, code)
 }
+const changePassword = async (req, res) => {
+    const code = async (req, res) => {
+        await handleInputValidation(req, res, [
+            body('author').exists().withMessage('body: author is required'),
+            body('author').isMongoId().withMessage('body: author must be MongoId'),
+            body('password').exists().withMessage('body: password is required'),
+        ], validationResult)
+
+        const { author, password } = req.body
+
+
+        const correct = await handleMongoVerifyPassword(author, password)
+        if (!correct) {
+            return handleError(res, 400, `Invalid credentials`)
+        }
+
+        const hashedPassword = await bcrypt.hash(password, process.env.SALT_ROUNDS)
+        const authorModel = await Author.findById(author)
+        authorModel.password = hashedPassword
+        await authorModel.save()
+
+        return handleResponse(res, { author })
+    }
+    await handleRequest(req, res, code)
+}
+const forgotPassword = async (req, res) => {
+    const code = async (req, res) => {
+        await handleInputValidation(req, res, [
+            body('email').exists().withMessage('body: email is required'),
+        ])
+
+        const { email } = req.body
+        const authorModel = await Author.findOne({ email })
+        if (!authorModel) {
+            return handleError(res, 400, `email: "${email}" isn't associated with an account`)
+        }
+
+        // Find a way to send an email to someone
+
+        return handleResponse(res, { author: authorModel._id, email })
+    }
+    await handleRequest(req, res, code)
+}
+
 
 const sendRequest = async (req, res) => {
     const code = async (req, res) => {
@@ -269,7 +312,7 @@ const removeRequest = async (req, res) => {
             authorModel.outgoingFriendRequests.pull(user)
             userModel.friends.push(author)
             authorModel.friends.push(user)
-            
+
             await Promise.all([
                 userModel.save(),
                 authorModel.save(),
@@ -527,6 +570,8 @@ module.exports = {
     signIn,
     deleteAccount,
     checkCredentials,
+    changePassword,
+    forgotPassword,
     sendRequest,
     removeRequest,
     acceptRequest,

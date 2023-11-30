@@ -4,7 +4,7 @@ const Author = require('../models/Author')
 const Book = require('../models/Book')
 const Scrap = require('../models/Scrap')
 const {
-    handleRequest, 
+    handleRequest,
     handleInputValidation,
     handleMongoGet,
     handleError,
@@ -124,7 +124,6 @@ const set = async (req, res) => {
     }
     await handleRequest(req, res, code)
 }
-
 const getPhoto = async (req, res) => {
     const code = async (req, res) => {
         await handleInputValidation(req, res, [
@@ -255,7 +254,7 @@ const removeThread = async (req, res) => {
         if (!bookModel.threads.includes(scrap) || !scrapModel.threads.includes(book)) {
             bookModel.threads.pull(scrap)
             scrapModel.threads.pull(book)
-            
+
             await Promise.all([
                 bookModel.save(),
                 scrapModel.save(),

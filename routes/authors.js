@@ -5,6 +5,8 @@ const {
     signIn,
     deleteAccount,
     checkCredentials,
+    changePassword,
+    forgotPassword,
     sendRequest,
     removeRequest,
     acceptRequest,
@@ -20,6 +22,8 @@ router.post('/signUp', signUp)
 router.post('/signIn', signIn)
 router.post('/deleteAccount', deleteAccount)
 router.post('/checkCredentials', checkCredentials)
+router.patch('/changePassword', changePassword)
+router.patch('/forgotPassword', forgotPassword)
 
 router.patch('/sendRequest', sendRequest)
 router.patch('/removeRequest', removeRequest)

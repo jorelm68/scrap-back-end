@@ -1,6 +1,7 @@
 const express = require('express')
 const {
     get,
+    getPhoto,
     set,
     reverseGeocode,
     authorSearch,
@@ -13,6 +14,7 @@ const {
 const router = express.Router()
 
 router.patch('/get', get)
+router.patch('/getPhoto', getPhoto)
 router.patch('/set', set)
 
 router.post('/reverseGeocode', reverseGeocode)
