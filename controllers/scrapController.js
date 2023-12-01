@@ -20,7 +20,7 @@ const exists = async (req, res) => {
         await handleInputValidation(req, res, [
             body('scrap').exists().withMessage('body: scrap is required'),
             body('scrap').isMongoId().withMessage('body: scrap must be MongoId'),
-        ])
+        ], validationResult)
 
         const { scrap } = req.body
 
