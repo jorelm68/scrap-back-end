@@ -38,7 +38,6 @@ const exists = async (req, res) => {
     }
     await handleRequest(req, res, code)
 }
-
 const saveScrap = async (req, res) => {
     const code = async (req, res) => {
         await handleInputValidation(req, res, [
@@ -135,8 +134,101 @@ const deleteScraps = async (req, res) => {
     await handleRequest(req, res, code)
 }
 
+const addThread = async (req, res) => {
+    const code = async (req, res) => {
+        await handleInputValidation(req, res, [
+            body('scrap').exists().withMessage('body: scrap is required'),
+            body('scrap').isMongoId().withMessage('body: scrap must be MongoId'),
+            body('book').exists().withMessage('body: book is required'),
+            body('book').isMongoId().withMessage('body: book must be MongoId'),
+        ], validationResult)
+
+        const { scrap, book } = req.body
+
+        const scrapModel = await Scrap.findById(scrap)
+        if (!scrapModel) {
+            return handleError(res, 400, `scrap: "${scrap}" doesn't exist`)
+        }
+
+        const bookModel = await Book.findById(book)
+        if (!bookModel) {
+            return handleError(res, 400, `book: "${book}" doesn't exist`)
+        }
+
+        if (scrapModel.threads.includes(book) || bookModel.threads.includes(scrap)) {
+            scrapModel.threads.pull(book)
+            bookModel.threads.pull(scrap)
+            scrapModel.threads.push(book)
+            bookModel.threads.push(scrap)
+            await Promise.all([
+                bookModel.save(),
+                scrapModel.save()
+            ])
+            return handleError(res, 400, `${scrapModel.title} has already been threaded with ${bookModel.title}`)
+        }
+
+        // Add the book as a thread to the scrap
+        bookModel.threads.pull(scrap)
+        scrapModel.threads.pull(book)
+        bookModel.threads.push(scrap)
+        scrapModel.threads.push(book)
+        await Promise.all([
+            bookModel.save(),
+            scrapModel.save(),
+        ])
+
+        return handleResponse(res, { scrap, book })
+    }
+    await handleRequest(req, res, code)
+}
+const removeThread = async (req, res) => {
+    const code = async (req, res) => {
+        await handleInputValidation(req, res, [
+            body('scrap').exists().withMessage('body: scrap is required'),
+            body('scrap').isMongoId().withMessage('body: scrap must be MongoId'),
+            body('book').exists().withMessage('body: book is required'),
+            body('book').isMongoId().withMessage('body: book must be MongoId'),
+        ], validationResult)
+
+        const { scrap, book } = req.body
+
+        const scrapModel = await Scrap.findById(scrap)
+        if (!scrapModel) {
+            return handleError(res, 400, `scrap: "${scrap}" doesn't exist`)
+        }
+
+        const bookModel = await Book.findById(book)
+        if (!bookModel) {
+            return handleError(res, 400, `book: "${book}" doesn't exist`)
+        }
+
+        if (!scrapModel.threads.includes(book) || !bookModel.threads.includes(scrap)) {
+            scrapModel.threads.pull(book)
+            bookModel.threads.pull(scrap)
+            await Promise.all([
+                bookModel.save(),
+                scrapModel.save()
+            ])
+            return handleError(res, 400, `${scrapModel.title} was never threaded with ${bookModel.title}`)
+        }
+
+        // Remove the thread between scrap and book
+        bookModel.threads.pull(scrap)
+        scrapModel.threads.pull(book)
+        await Promise.all([
+            bookModel.save(),
+            scrapModel.save(),
+        ])
+
+        return handleResponse(res, { scrap, book })
+    }
+    await handleRequest(req, res, code)
+}
+
 module.exports = {
     exists,
     saveScrap,
     deleteScraps,
+    addThread,
+    removeThread,
 }
