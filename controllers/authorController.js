@@ -198,6 +198,17 @@ const forgotPassword = async (req, res) => {
             return handleError(res, 400, `email: "${email}" isn't associated with an account`)
         }
 
+        const existingPasswordToken = await PasswordToken.findOne({ email })
+        console.log(existingPasswordToken)
+        if (existingPasswordToken) {
+            if (existingPasswordToken.expirationDate < new Date()) {
+                await existingPasswordToken.deleteOne()
+            }
+            else {
+                return handleError(res, 400, `You already have an active password reset request. Please check your email or wait until your current request expires before making another.`)
+            }
+        }
+
         // Create a PasswordToken that expires in 10 minutes
         const currentTime = new Date();
         const tenMinutesLater = new Date(currentTime.getTime() + 10 * 60 * 1000);
