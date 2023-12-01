@@ -2,6 +2,7 @@ require('dotenv').config()
 const bcrypt = require('bcrypt')
 const mongoose = require('mongoose')
 const PasswordToken = require('../models/PasswordToken')
+const ConfirmationToken = require('../models/ConfirmationToken')
 const Author = require('../models/Author')
 const {
     handleRequest,
@@ -47,6 +48,30 @@ const resetPasswordConfirmation = async (req, res) => {
     }
     await handleRequest(req, res, code)
 }
+const activateAccount = async (req, res) => {
+    const code = async (req, res) => {
+        const { confirmationToken } = req.params
+
+        const confirmationTokenModel = await ConfirmationToken.findById(confirmationToken)
+        console.log(confirmationToken, confirmationTokenModel)
+        if (!confirmationTokenModel) {
+            return res.render('activateAccountError', {})
+        }
+
+        const author = confirmationTokenModel.author
+        await confirmationTokenModel.deleteOne()
+
+        const authorModel = await Author.findById(author)
+        if (!authorModel) {
+            return res.render('activateAccountError', {})
+        }
+
+        authorModel.activated = true
+        await authorModel.save()
+        return res.render('activateAccount', { author })
+    }
+    await handleRequest(req, res, code)
+}
 
 const privacyPolicy = async (req, res) => {
     const code = async (req, res) => {
@@ -66,5 +91,6 @@ module.exports = {
     resetPassword,
     resetPasswordConfirmation,
     privacyPolicy,
+    activateAccount,
     homePage,
 }

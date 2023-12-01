@@ -4,6 +4,7 @@ const fs = require('fs')
 const mongoose = require('mongoose')
 const bcrypt = require('bcrypt')
 const Author = require('../models/Author')
+const ConfirmationToken = require('../models/ConfirmationToken')
 const Book = require('../models/Book')
 const Scrap = require('../models/Scrap')
 const Action = require('../models/Action')
@@ -76,6 +77,7 @@ const signUp = async (req, res) => {
             pseudonym,
             email,
             password: hashedPassword,
+            activated: false,
 
             headshot,
             cover,
@@ -88,6 +90,19 @@ const signUp = async (req, res) => {
             createdAt: createdAt ? createdAt : new Date()
         })
         await authorModel.save()
+
+        // Create a ConfirmationToken for this account so they can verify
+        const confirmationTokenModel = new ConfirmationToken({
+            author: authorModel._id,
+        })
+        await confirmationTokenModel.save()
+
+        // Send an email to the person's email address to activate their account
+        const templatePath = 'views/emailActivateAccount.ejs'; // Replace with your EJS file path
+        const templateContent = fs.readFileSync(templatePath, 'utf8');
+
+        const htmlContent = ejs.render(templateContent, { firstName: authorModel.firstName, confirmationToken: confirmationTokenModel._id })
+        await sendEmail(req, res, email, 'Activate Account', htmlContent)
 
         return handleResponse(res, { author: authorModel._id })
     }
@@ -232,7 +247,6 @@ const forgotPassword = async (req, res) => {
     }
     await handleRequest(req, res, code)
 }
-
 
 const sendRequest = async (req, res) => {
     const code = async (req, res) => {

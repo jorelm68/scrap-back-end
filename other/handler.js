@@ -4,6 +4,8 @@ const Author = require('../models/Author')
 const Action = require('../models/Action')
 const Book = require('../models/Book')
 const Scrap = require('../models/Scrap')
+const ConfirmationToken = require('../models/ConfirmationToken')
+const PasswordToken = require('../models/PasswordToken')
 const AWS = require('aws-sdk')
 const sharp = require('sharp')
 const bucketName = process.env.BUCKET_NAME
@@ -263,6 +265,12 @@ const deepDeleteAuthor = async (req, res, _id) => {
         // Delete the author id from any books they may have liked
         handleMongoFilter('Book', 'likes', _id),
     ])
+
+    // If necessary, delete the author's confirmation token
+    await ConfirmationToken.deleteMany({ author: _id })
+
+    // If necessary, delete any password reset token associated with the author
+    await PasswordToken.deleteMany({ email: authorModel.email })
 
     // Delete the author document from MongoDB
     await Author.findOneAndDelete({ _id })

@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Password Reset Email</title>
+    <title>Email Confirmation</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         body {
@@ -22,7 +22,7 @@
         }
 
         h3 {
-            color: #e53935;
+            color: #2196F3;
             margin-bottom: 10px;
         }
 
@@ -45,21 +45,20 @@
 <body>
     <div class="email-container">
         <p>
-            <em>This is an automated message from the Scrap team</em>
+            <em>This is an automated message from the Scrap team.</em>
         </p>
         <h3>
-            <%= firstName %>... you forgot your password?<br>
+            Hello <%= firstName %>!<br>
         </h3>
         <p>
-            No worries, it happens!<br>
-            Go ahead and click the link below to reset your password.<br>
-            This link expires in 10 minutes and can only be used once.<br>
+            Thank you for registering for scrap! Please click the link below to confirm your email address:<br>
         </p>
         <h3>
-            <a href="http://localhost:4000/resetPassword/<%= passwordToken %>">Reset Password</a>
+            <a href="http://localhost:4000/activateAccount/<%= confirmationToken %>">Confirm Email</a>
         </h3>
         <p>
-            If you did not request a password reset, you can safely ignore this message.<br>
+            This link will verify your email address and activate your account.<br>
+            If you did not sign up for an account, you can safely ignore this message.<br>
         </p>
     </div>
 </body>
