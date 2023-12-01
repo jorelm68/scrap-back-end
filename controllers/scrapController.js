@@ -6,8 +6,12 @@ const Scrap = require('../models/Scrap')
 const {
     handleRequest,
     handleS3Put,
-    deepDeleteScrap
+    deepDeleteScrap,
+    handleInputValidation,
+    handleResponse,
+    handleError,
 } = require('../other/handler')
+const { ObjectId } = require('mongodb')
 const { body, validationResult } = require('express-validator')
 
 const exists = async (req, res) => {
@@ -40,20 +44,18 @@ const saveScrap = async (req, res) => {
         await handleInputValidation(req, res, [
             body('author').exists().withMessage('body: author is required'),
             body('author').isMongoId().withMessage('body: author must be MongoId'),
-            body('prograph').exists().withMessage('body: prograph is required'),
-            body('prograph').isMongoId().withMessage('body: prograph must be MongoId'),
-            body('retrograph').exists().withMessage('body: retrograph is required'),
-            body('retrograph').isMongoId().withMessage('body: retrograph must be MongoId'),
             body('latitude').exists().withMessage('body: latitude is required'),
             body('longitude').exists().withMessage('body: longitude is required'),
         ], validationResult)
+
+        if (!req.files || !req.files[0] || !req.files[1] || !req.files[0].buffer || !req.files[1].buffer) {
+            return handleError(res, 400, `Files were not properly delivered`)
+        }
 
         let {
             author,
             title,
             description,
-            prograph,
-            retrograph,
             place,
             location,
 
@@ -70,6 +72,10 @@ const saveScrap = async (req, res) => {
         if (!authorModel) {
             return handleError(res, 400, `author: "${author}" doesn't exist`)
         }
+
+        // Generate a unique MongoId for each image
+        const prograph = new ObjectId();
+        const retrograph = new ObjectId();
 
         // Create the document in MongoDB
         const scrap = new Scrap({
