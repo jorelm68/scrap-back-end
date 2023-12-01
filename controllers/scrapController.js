@@ -117,7 +117,7 @@ const saveScrap = async (req, res) => {
 const deleteScraps = async (req, res) => {
     const code = async (req, res) => {
         await handleInputValidation(req, res, [
-            body('scraps').exists().withMessage('body: scrap is required'),
+            body('scraps').exists().withMessage('body: scraps is required'),
         ], validationResult)
 
         const { scraps } = req.body
