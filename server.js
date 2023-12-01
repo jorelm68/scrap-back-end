@@ -38,6 +38,9 @@ app.use((req, res, next) => {
     })
 })
 
+// Set up middleware to handle form data
+app.use(express.urlencoded({ extended: true }));
+
 // Log each request
 app.use((req, res, next) => {
     console.log(req.path, req.method, req.body)

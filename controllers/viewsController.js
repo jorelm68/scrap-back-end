@@ -1,10 +1,13 @@
 require('dotenv').config()
+const bcrypt = require('bcrypt')
 const mongoose = require('mongoose')
 const PasswordToken = require('../models/PasswordToken')
+const Author = require('../models/Author')
 const {
     handleRequest,
 } = require('../other/handler')
 const { body, param, validationResult } = require('express-validator')
+const saltRounds = 10
 
 const resetPassword = async (req, res) => {
     const code = async (req, res) => {
@@ -15,16 +18,32 @@ const resetPassword = async (req, res) => {
         }
 
         const passwordTokenModel = await PasswordToken.findById(passwordToken)
-        if (!passwordTokenModel) {
+        if (!passwordTokenModel || passwordTokenModel.expirationDate < new Date()) {
             return res.render('invalidPasswordToken', { passwordToken })
         }
 
-        const expirationDate = passwordTokenModel.expirationDate
-        if (expirationDate < new Date()) {
-            return res.render('expiredPasswordToken', { passwordToken, expirationDate })
+        return res.render('resetPassword', { passwordToken })
+    }
+    await handleRequest(req, res, code)
+}
+const resetPasswordConfirmation = async (req, res) => {
+    const code = async (req, res) => {
+        const { newPassword, passwordToken } = req.body
+
+        const passwordTokenModel = await PasswordToken.findById(passwordToken)
+        const email = passwordTokenModel.email
+        await passwordTokenModel.deleteOne()
+
+        const authorModel = await Author.findOne({ email })
+        if (!authorModel) {
+            return res.render('resetPasswordFailure', {})
         }
 
-        return res.render('resetPassword', { passwordToken })
+        const hashedPassword = await bcrypt.hash(newPassword, saltRounds)
+        authorModel.password = hashedPassword
+        await authorModel.save()
+
+        return res.render('resetPasswordSuccess', {})
     }
     await handleRequest(req, res, code)
 }
@@ -45,6 +64,7 @@ const homePage = async (req, res) => {
 
 module.exports = {
     resetPassword,
+    resetPasswordConfirmation,
     privacyPolicy,
     homePage,
 }
