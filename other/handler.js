@@ -341,7 +341,6 @@ const deepDeleteScrap = async (req, res, _id) => {
     if (authorModel.cover === prograph) {
         authorModel.cover = ''
     }
-    await authorModel.save()
 
     // Delete the scrap id from any book's cover
     await Book.updateMany(
