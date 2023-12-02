@@ -8,7 +8,7 @@ const bookSchema = new Schema({
     cover: String,
     privacy: String,
     
-    startDate: Date,
+    beginDate: Date,
     endDate: Date,
 
     center: String,

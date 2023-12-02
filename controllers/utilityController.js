@@ -9,130 +9,85 @@ const {
     handleMongoGet,
     handleError,
     handleS3Get,
+    handleResponse,
 } = require('../other/handler')
+const { body, param, validationResult } = require('express-validator')
 
 const get = async (req, res) => {
     const code = async (req, res) => {
         await handleInputValidation(req, res, [
-            body('author').exists().withMessage('body: author is required'),
-            body('author').isMongoId().withMessage('body: author must be MongoId'),
-            body('demands').isMongoId().withMessage('body: demands is required'),
+            param('model').exists().withMessage('param: model is required'),
+            param('id').exists().withMessage('param: id is required'),
+            param('id').isMongoId().withMessage('param: id must be MongoId'),
+            param('key').isMongoId().withMessage('param: key is required'),
         ])
 
-        const { author, demands } = req.body
-        const authorModel = await Author.findById(author)
-        if (!authorModel) {
-            return handleError(res, 400, `author: "${author}" doesn't exist`)
+        const { model, id, key } = req.params
+
+        const Model = mongoose.model(model)
+        if (!(Model instanceof mongoose.Model)) {
+            return handleError(res, 400, `model: "${model}" doesn't exist`)
         }
 
-        let supply = []
-        for (const demand of demands) {
-            const { author, scrap, book, data } = demand
-            if (author) {
-                const authorModel = await Author.findById(author)
-                if (!authorModel) {
-                    return handleError(res, 400, `author: "${author}" doesn't exist`)
-                }
-
-                for (const key of data) {
-                    // Array of strings (each string is a key)
-                    const value = await handleMongoGet(req, res, 'Author', author, key)
-                    supply.push({ [key]: value })
-                }
-            }
-            else if (scrap) {
-                const scrapModel = await Scrap.findById(scrap)
-                if (!scrapModel) {
-                    return handleError(res, 400, `scrap: "${scrap}" doesn't exist`)
-                }
-
-                for (const key of data) {
-                    // Array of strings (each string is a key)
-                    const value = await handleMongoGet(req, res, 'Scrap', scrap, key)
-                    supply.push({ [key]: value })
-                }
-            }
-            else if (book) {
-                const bookModel = await Book.findById(book)
-                if (!bookModel) {
-                    return handleError(res, 400, `book: "${book}" doesn't exist`)
-                }
-
-                for (const key of data) {
-                    // Array of strings (each string is a key)
-                    const value = await handleMongoGet(req, res, 'Scrap', scrap, key)
-                    supply.push({ [key]: value })
-                }
-            }
+        const document = Model.findById(id)
+        if (!modelModel) {
+            return handleError(`id: "${id}" doesn't exist`)
         }
-        return handleResponse(res, { supply })
+
+        // Access the property using the provided key
+        const value = document[key]
+
+        if (value === undefined) {
+            return handleError(res, 400, `key: "${key}" doesn't exist in the document`)
+        }
+
+        // Return the value obtained from the document using the provided key
+        return handleResponse(res, { [key]: value })
     }
     await handleRequest(req, res, code)
 }
 const set = async (req, res) => {
     const code = async (req, res) => {
         await handleInputValidation(req, res, [
-            body('author').exists().withMessage('body: author is required'),
-            body('author').isMongoId().withMessage('body: author must be MongoId'),
-            body('demands').exists().withMessage('body: demands is required'),
+            body('model').exists().withMessage('body: model is required'),
+            body('id').exists().withMessage('body: id is required'),
+            body('id').isMongoId().withMessage('body: id must be MongoId'),
+            body('key').exists().withMessage('body: key is required'),
+            body('value').exists().withMessage('body: value is required'),
         ], validationResult)
 
-        const { author, demands } = req.body
-        const authorModel = await Author.findById(author)
-        if (!authorModel) {
-            return handleError(res, 400, `author: "${author}" doesn't exist`)
+        const { model, id, key, value } = req.body
+
+        const Model = mongoose.model(model)
+        if (!(Model instanceof mongoose.Model)) {
+            return handleError(res, 400, `model: "${model}" doesn't exist`)
         }
 
-        for (const demand of demands) {
-            const { author, book, scrap, data } = req.body
-            if (author) {
-                const authorModel = await Author.findById(author)
-                if (!authorModel) {
-                    return handleError(res, 400, `author: "${author}" doesn't exist`)
-                }
-                for (const pair of demand) {
-                    const { key, value } = pair
-                    authorModel[key] = value
-                }
-                await authorModel.save()
-            }
-            else if (book) {
-                const bookModel = await Book.findById(book)
-                if (!bookModel) {
-                    return handleError(res, 400, `book: "${book}" doesn't exist`)
-                }
-                for (const pair of demand) {
-                    const { key, value } = pair
-                    bookModel[key] = value
-                }
-                await bookModel.save()
-            }
-            else if (scrap) {
-                const scrapModel = await Scrap.findById(scrap)
-                if (!scrapModel) {
-                    return handleError(res, 400, `scrap: "${scrap}" doesn't exist`)
-                }
-                for (const pair of demand) {
-                    const { key, value } = pair
-                    scrapModel[key] = value
-                }
-                await scrapModel.save()
-            }
+        const document = await Model.findById(id)
+        if (!document) {
+            return handleError(res, 400, `id: "${id}" doesn't exist`)
         }
 
-        return handleResponse(res, { author, demands })
+        // Update the document's property with the provided key and value
+        document[key] = value
+        await document.save()
+
+        // Return a success message or the updated document if needed
+        return handleResponse(res, { [key]: value })
     }
+
     await handleRequest(req, res, code)
 }
+
 const getPhoto = async (req, res) => {
     const code = async (req, res) => {
         await handleInputValidation(req, res, [
-            body('photo').exists().withMessage('body: photo is required'),
-            body('photo').isMongoId().withMessage('body: photo must be MongoId'),
-            body('size').exists().withMessage('body: size is required'),
+            param('photo').exists().withMessage('param: photo is required'),
+            param('photo').isMongoId().withMessage('param: photo must be MongoId'),
+            param('size').exists().withMessage('param: size is required'),
         ])
 
-        const { photo, size } = req.body
+        const { photo, size } = req.params
 
         // Get the image buffer from AWS W3
         const { Body } = await handleS3Get(`photos/${photo}.jpg`)

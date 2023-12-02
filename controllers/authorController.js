@@ -143,11 +143,11 @@ const deleteAccount = async (req, res) => {
     const code = async (req, res) => {
         // Apply input validation and sanitization rules
         await handleInputValidation(req, res, [
-            body('author').exists().withMessage('body: author is required'),
-            body('author').isMongoId().withMessage('body: author must be valid MongoId')
+            param('author').exists().withMessage('param: author is required'),
+            param('author').isMongoId().withMessage('param: author must be valid MongoId')
         ], validationResult)
 
-        const { author } = req.body
+        const { author } = req.params
 
         await deepDeleteAuthor(req, res, author)
 

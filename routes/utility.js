@@ -13,8 +13,8 @@ const {
 
 const router = express.Router()
 
-router.patch('/get', get)
-router.patch('/getPhoto', getPhoto)
+router.get('/get/:model/:id/:key', get)
+router.get('/getPhoto/:photo/:size', getPhoto)
 router.patch('/set', set)
 
 router.post('/reverseGeocode', reverseGeocode)
