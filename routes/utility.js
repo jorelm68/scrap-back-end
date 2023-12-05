@@ -13,7 +13,7 @@ const {
 
 const router = express.Router()
 
-router.get('/get/:model/:id/:key', get)
+router.get('/get/:model/:id/:key/:user', get)
 router.get('/getPhoto/:photo/:size', getPhoto)
 router.patch('/set', set)
 

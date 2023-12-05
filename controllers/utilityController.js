@@ -10,6 +10,7 @@ const {
     handleError,
     handleS3Get,
     handleResponse,
+    handleResize,
 } = require('../other/handler')
 const { body, param, validationResult } = require('express-validator')
 
@@ -19,18 +20,36 @@ const get = async (req, res) => {
             param('model').exists().withMessage('param: model is required'),
             param('id').exists().withMessage('param: id is required'),
             param('id').isMongoId().withMessage('param: id must be MongoId'),
-            param('key').isMongoId().withMessage('param: key is required'),
-        ])
+            param('key').exists().withMessage('param: key is required'),
+            param('user').exists().withMessage('param: user is required'),
+            param('user').isMongoId().withMessage('param: user must be MongoId'),
+        ], validationResult)
 
-        const { model, id, key } = req.params
+        const { model, id, key, user } = req.params
+        if (key === 'relationship') {
+            const userModel = await Author.findById(user)
+            if (!userModel) {
+                return handleError(res, 400, `user: "${user}" doesn't exist`)
+            }
 
-        const Model = mongoose.model(model)
-        if (!(Model instanceof mongoose.Model)) {
-            return handleError(res, 400, `model: "${model}" doesn't exist`)
+            let relationship = 'none'
+            if (userModel.friends.includes(id)) {
+                relationship = 'friends'
+            }
+            else if (userModel.outgoingFriendRequests.includes(id)) {
+                relationship = 'outgoingFriendRequest'
+            }
+            else if (userModel.incomingFriendRequests.includes(id)) {
+                relationship = 'incomingFriendRequest'
+            }
+
+            return handleResponse(res, { relationship })
         }
 
-        const document = Model.findById(id)
-        if (!modelModel) {
+        const Model = require(`../models/${model}`); // Assuming your models are in a 'models' folder
+
+        document = await Model.findById(id);
+        if (!document) {
             return handleError(`id: "${id}" doesn't exist`)
         }
 
@@ -85,7 +104,7 @@ const getPhoto = async (req, res) => {
             param('photo').exists().withMessage('param: photo is required'),
             param('photo').isMongoId().withMessage('param: photo must be MongoId'),
             param('size').exists().withMessage('param: size is required'),
-        ])
+        ], validationResult)
 
         const { photo, size } = req.params
 

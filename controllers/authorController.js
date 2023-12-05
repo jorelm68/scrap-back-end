@@ -56,7 +56,7 @@ const signUp = async (req, res) => {
             body('password').exists().withMessage('body: password is required')
         ], validationResult)
 
-        const { pseudonym, email, password, headshot, cover, firstName, lastName, pushToken, createdAt } = req.body
+        const { pseudonym, email, password, firstName, lastName, pushToken, createdAt } = req.body
 
         // Check if the pseudonym is already taken
         const existingPseudonym = await Author.findOne({ pseudonym })
@@ -78,9 +78,6 @@ const signUp = async (req, res) => {
             email,
             password: hashedPassword,
             activated: false,
-
-            headshot,
-            cover,
 
             firstName,
             lastName,
@@ -118,24 +115,24 @@ const signIn = async (req, res) => {
 
         const { value, password } = req.body
 
-        // Find the user in the database by email or pseudonym
-        const userModel = await Author.findOne({
+        // Find the author in the database by email or pseudonym
+        const authorModel = await Author.findOne({
             $or: [{ email: value }, { pseudonym: value }],
         })
 
-        // Check if user exists
-        if (!userModel) {
+        // Check if author exists
+        if (!authorModel) {
             return handleError(res, 400, 'Invalid credentials')
         }
 
         // Check if password is correct
-        const correct = await handleMongoVerifyPassword(userModel._id, password)
+        const correct = await handleMongoVerifyPassword(authorModel._id, password)
 
         if (!correct) {
             return handleError(res, 400, 'Invalid credentials')
         }
 
-        return handleResponse(res, { user: userModel._id })
+        return handleResponse(res, { author: authorModel._id, pseudonym: authorModel.pseudonym })
     }
     await handleRequest(req, res, code)
 }
@@ -143,11 +140,11 @@ const deleteAccount = async (req, res) => {
     const code = async (req, res) => {
         // Apply input validation and sanitization rules
         await handleInputValidation(req, res, [
-            param('author').exists().withMessage('param: author is required'),
-            param('author').isMongoId().withMessage('param: author must be valid MongoId')
+            body('author').exists().withMessage('body: author is required'),
+            body('author').isMongoId().withMessage('body: author must be valid MongoId')
         ], validationResult)
 
-        const { author } = req.params
+        const { author } = req.body
 
         await deepDeleteAuthor(req, res, author)
 

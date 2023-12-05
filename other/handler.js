@@ -216,6 +216,17 @@ const handleS3Delete = async (key) => {
     }).promise()
 }
 
+const handleResize = async (buffer, size) => {
+    let imageSize = parseInt(size, 10) || 1080 // Default size is 1080 if not provided or invalid
+
+    // Resize the image using sharp
+    const resizedImageBuffer = await sharp(buffer)
+        .resize(imageSize, imageSize) // Resize to the desired size
+        .toBuffer()
+
+    return resizedImageBuffer
+}
+
 const deepDeleteAuthor = async (req, res, _id) => {
     const authorModel = await Author.findById(_id)
 
@@ -426,6 +437,7 @@ module.exports = {
     handleS3Put,
     handleS3Get,
     handleS3Delete,
+    handleResize,
     deepDeleteAuthor,
     deepDeleteBook,
     deepDeleteScrap,
