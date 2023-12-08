@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Email Confirmation</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+
+        .email-container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+        }
+
+        h3 {
+            color: #2196F3;
+            margin-bottom: 10px;
+        }
+
+        a {
+            color: #4caf50;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        em {
+            font-style: italic;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="email-container">
+        <p>
+            <em>This is an automated message from the Scrap team.</em>
+        </p>
+        <h3>
+            Hello <%= firstName %>!<br>
+        </h3>
+        <p>
+            You successfully changed your email! Please click the link below to confirm your new email address:<br>
+        </p>
+        <h3>
+            <a href="http://localhost:4000/changeEmail/<%= confirmationToken %>">Confirm Email</a>
+        </h3>        
+    </div>
+</body>
+
+</html>

@@ -1,8 +1,11 @@
 require('dotenv').config()
+const fs = require('fs')
+const ejs = require('ejs')
 const mongoose = require('mongoose')
 const Author = require('../models/Author')
 const Book = require('../models/Book')
 const Scrap = require('../models/Scrap')
+const ConfirmationToken = require('../models/ConfirmationToken')
 const {
     handleRequest,
     handleInputValidation,
@@ -11,6 +14,7 @@ const {
     handleS3Get,
     handleResponse,
     handleResize,
+    sendEmail,
 } = require('../other/handler')
 const { body, param, validationResult } = require('express-validator')
 
@@ -45,6 +49,22 @@ const get = async (req, res) => {
 
             return handleResponse(res, { relationship })
         }
+        else if (['headshot', 'cover'].includes(key)) {
+            const userModel = await Author.findById(id)
+            if (!userModel) {
+                return handleError(res, 400, `user: "${user}" doesn't exist`)
+            }
+
+            const scrap = userModel.headshotAndCover
+            const scrapModel = scrapModel.findById(scrap)
+            if (!scrapModel) {
+                return handleError(res, 400, `scrap: "${scrap}" doesn't exist`)
+            }
+
+            return handleResponse(res, {
+                [key]: key === 'headshot' ? scrapModel.headshot : scrapModel.cover
+            })
+        }
 
         const Model = require(`../models/${model}`); // Assuming your models are in a 'models' folder
 
@@ -77,10 +97,7 @@ const set = async (req, res) => {
 
         const { model, id, key, value } = req.body
 
-        const Model = mongoose.model(model)
-        if (!(Model instanceof mongoose.Model)) {
-            return handleError(res, 400, `model: "${model}" doesn't exist`)
-        }
+        const Model = require(`../models/${model}`) // Assuming your models are in a 'models' folder
 
         const document = await Model.findById(id)
         if (!document) {
@@ -89,6 +106,26 @@ const set = async (req, res) => {
 
         // Update the document's property with the provided key and value
         document[key] = value
+
+        if (key === 'email') {
+            document.activated = false
+            document.email = value
+            await document.save()
+            // Send an email to activate the person's account
+            // Create a ConfirmationToken for this account so they can verify
+            const confirmationTokenModel = new ConfirmationToken({
+                author: document._id,
+            })
+            await confirmationTokenModel.save()
+
+            // Send an email to the person's email address to activate their account
+            const templatePath = 'views/emailChangeEmail.ejs'; // Replace with your EJS file path
+            const templateContent = fs.readFileSync(templatePath, 'utf8');
+
+            const htmlContent = ejs.render(templateContent, { firstName: document.firstName, confirmationToken: confirmationTokenModel._id })
+            await sendEmail(req, res, value, 'Confirm Email', htmlContent)
+        }
+
         await document.save()
 
         // Return a success message or the updated document if needed

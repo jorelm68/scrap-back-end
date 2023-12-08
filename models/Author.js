@@ -19,8 +19,7 @@ const authorSchema = new Schema({
     },
     activated: Boolean,
 
-    headshot: String,
-    cover: String,
+    headshotAndCover: String,
 
     firstName: String,
     lastName: String,

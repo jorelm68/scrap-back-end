@@ -72,6 +72,30 @@ const activateAccount = async (req, res) => {
     }
     await handleRequest(req, res, code)
 }
+const changeEmail = async (req, res) => {
+    const code = async (req, res) => {
+        const { confirmationToken } = req.params
+
+        const confirmationTokenModel = await ConfirmationToken.findById(confirmationToken)
+        console.log(confirmationToken, confirmationTokenModel)
+        if (!confirmationTokenModel) {
+            return res.render('changeEmailError', {})
+        }
+
+        const author = confirmationTokenModel.author
+        await confirmationTokenModel.deleteOne()
+
+        const authorModel = await Author.findById(author)
+        if (!authorModel) {
+            return res.render('changeEmailError', {})
+        }
+
+        authorModel.activated = true
+        await authorModel.save()
+        return res.render('changeEmail', { author })
+    }
+    await handleRequest(req, res, code)
+}
 
 const privacyPolicy = async (req, res) => {
     const code = async (req, res) => {
@@ -92,5 +116,6 @@ module.exports = {
     resetPasswordConfirmation,
     privacyPolicy,
     activateAccount,
+    changeEmail,
     homePage,
 }
