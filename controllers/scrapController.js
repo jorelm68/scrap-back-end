@@ -78,31 +78,30 @@ const saveScrap = async (req, res) => {
 
         // Create the document in MongoDB
         const scrap = new Scrap({
-            author,
-            title,
-            description,
+            author: author ? author : '',
+            title: title ? title : '',
+            description: description ? description : '',
             prograph,
             retrograph,
-            place,
-            location,
+            place: place ? place : '',
 
-            latitude,
-            longitude,
+            latitude: latitude ? latitude : '',
+            longitude: longitude ? longitude : '',
 
-            threads,
-            book,
+            threads: threads ? threads : [],
+            book: book ? book : '',
             createdAt: createdAt ? createdAt : new Date()
         })
         await scrap.save()
 
         // Get the image buffer data from the req.files
-        const prographBuffer = req.files[0].buffer
-        const retrographBuffer = req.files[1].buffer
+        const iPrograph = req.files[0].buffer
+        const iRetrograph = req.files[1].buffer
 
         // Add the scrap's retrograph and prograph to the AWS W3 bucket
         await Promise.all([
-            handleS3Put(`photos/${prograph}.jpg`, prographBuffer),
-            handleS3Put(`photos/${retrograph}.jpg`, retrographBuffer),
+            handleS3Put(`photos/${prograph}.jpg`, iPrograph),
+            handleS3Put(`photos/${retrograph}.jpg`, iRetrograph),
         ])
 
         // Add the scrap to the author's scraps array

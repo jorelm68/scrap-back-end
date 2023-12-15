@@ -5,13 +5,12 @@ const bookSchema = new Schema({
     author: String,
     title: String,
     description: String,
-    cover: String,
     privacy: String,
     
     beginDate: Date,
     endDate: Date,
 
-    center: String,
+    representative: String,
 
     likes: [String],
     scraps: [String],

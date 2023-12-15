@@ -8,9 +8,10 @@ const Action = require('../models/Action')
 const {
     handleRequest,
     handleInputValidation,
-    deepDeleteBook
+    deepDeleteBook,
+    handleResponse
 } = require('../other/handler')
-const { validationResult } = require('express-validator')
+const { body, validationResult } = require('express-validator')
 
 const exists = async (req, res) => {
     const code = async (req, res) => {
@@ -48,50 +49,58 @@ const saveBook = async (req, res) => {
             title,
             description,
             author,
-            scraps,
+            scraps: scrapsRaw,
             privacy,
-            cover,
-            center,
+            representative,
             likes,
             createdAt,
         } = req.body
 
+        const scraps = JSON.parse(scrapsRaw)
+
+        const authorModel = await Author.findById(author)
+        if (!authorModel) {
+            return handleError(res, 400, `author: "${author}" doesn't exist`)
+        }
+        
         // Create the document in MongoDB
-        const book = new Book({
+        const bookModel = new Book({
             author,
             scraps,
             title,
             description,
             privacy,
-            cover,
+            representative,
             likes,
-            center,
             createdAt: createdAt ? createdAt : new Date()
         })
-        await book.save()
+        await bookModel.save()
 
-        if (privacy === 'public') {
-            await handleAction(req, res, {
-                _id: new mongoose.Types.ObjectId(),
-                actionType: 'postBook',
-                senderAuthor: author,
-                targetAuthor: author,
-                targetBook: book._id,
-            })
-        }
+        // if (privacy === 'public') {
+        //     await handleAction(req, res, {
+        //         _id: new mongoose.Types.ObjectId(),
+        //         actionType: 'postBook',
+        //         senderAuthor: author,
+        //         targetAuthor: author,
+        //         targetBook: book._id,
+        //     })
+        // }
 
         // Add the book reference to each scrap
         for (const scrap of scraps) {
             const scrapModel = await Scrap.findById(scrap)
-            scrapModel.book = book._id
+            if (!scrapModel) {
+                return handleError(res, 400, `scrap: "${scrap}" doesn't exist`)
+            }
+            scrapModel.book = bookModel._id
             await scrapModel.save()
         }
 
         // Add the book to author's books array
-        authorModel.books.push(book._id)
+        authorModel.books.push(bookModel._id)
         await authorModel.save()
 
-        return handleResponse(res, { book: book._id })
+        return handleResponse(res, { book: bookModel._id })
     }
     await handleRequest(req, res, code)
 }
