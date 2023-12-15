@@ -5,7 +5,7 @@ const bookSchema = new Schema({
     author: String,
     title: String,
     description: String,
-    privacy: String,
+    isPublic: Boolean,
     
     beginDate: Date,
     endDate: Date,

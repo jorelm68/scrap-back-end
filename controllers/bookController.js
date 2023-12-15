@@ -50,7 +50,7 @@ const saveBook = async (req, res) => {
             description,
             author,
             scraps: scrapsRaw,
-            privacy,
+            isPublic,
             representative,
             likes,
             createdAt,
@@ -69,7 +69,7 @@ const saveBook = async (req, res) => {
             scraps,
             title,
             description,
-            privacy,
+            isPublic: isPublic ? false : true,
             representative,
             likes,
             createdAt: createdAt ? createdAt : new Date()
