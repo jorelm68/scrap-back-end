@@ -88,6 +88,27 @@ const get = async (req, res) => {
                 publicBooks,
             })
         }
+        else if (key === 'unbookedScraps') {
+            const userModel = await Author.findById(id)
+            if (!userModel) {
+                return handleError(res, 400, `user: "${user}" doesn't exist`)
+            }
+
+            const scraps = userModel.scraps
+            let unbookedScraps = []
+            for (const scrap of scraps) {
+                const scrapModel = await Scrap.findById(scrap)
+                if (!scrapModel) {
+                    return handleError(res, 400, `scrap: "${scrap}" doesn't exist`)
+                }
+                const book = scrapModel.book
+                if (!book || book === '') {
+                    unbookedScraps.push(scrap)
+                }
+            }
+
+            return handleResponse(res, { unbookedScraps })
+        }
 
         const Model = require(`../models/${model}`); // Assuming your models are in a 'models' folder
 
