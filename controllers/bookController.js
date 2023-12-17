@@ -9,7 +9,8 @@ const {
     handleRequest,
     handleInputValidation,
     deepDeleteBook,
-    handleResponse
+    handleResponse,
+    handleScrapSort
 } = require('../other/handler')
 const { body, validationResult } = require('express-validator')
 
@@ -128,7 +129,10 @@ const addScrap = async (req, res) => {
 
         // Add the scrap's id to the book's scraps array
         bookModel.scraps.pull(scrap)
-        bookModel.scraps.push(scrap)
+        let scraps = bookModel.scraps
+        scraps.push(scrap)
+        scraps = await handleScrapSort(scraps)
+        bookModel.scraps = scraps
 
         // Set the book as the scrap's book
         scrapModel.book = book

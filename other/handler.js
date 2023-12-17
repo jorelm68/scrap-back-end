@@ -426,6 +426,34 @@ const sendEmail = async (req, res, email, subject, html) => {
     }
 }
 
+const handleScrapSort = async (scraps) => {
+    let scrapDetails = [];
+
+    // Fetch details for each scrap asynchronously
+    for (const scrapId of scraps) {
+        try {
+            const scrapModel = await Scrap.findById(scrapId);
+            if (scrapModel) {
+                scrapDetails.push({
+                    id: scrapId,
+                    createdAt: scrapModel.createdAt
+                });
+            }
+        } catch (error) {
+            console.error(`Error fetching details for scrap ID ${scrapId}:`, error);
+        }
+    }
+
+    // Sort the scrapDetails array by createdAt timestamp
+    scrapDetails.sort((a, b) => a.createdAt - b.createdAt);
+
+    // Extract only the IDs from the sorted scrapDetails
+    const sortedIds = scrapDetails.map(scrap => scrap.id);
+
+    return sortedIds;
+}
+
+
 module.exports = {
     handleError,
     handleRequest,
@@ -443,4 +471,5 @@ module.exports = {
     deepDeleteBook,
     deepDeleteScrap,
     sendEmail,
+    handleScrapSort,
 }
