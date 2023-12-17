@@ -65,6 +65,29 @@ const get = async (req, res) => {
                 [key]: key === 'headshot' ? scrapModel.headshot : scrapModel.cover
             })
         }
+        else if (key === 'publicBooks') {
+            const userModel = await Author.findById(id)
+            if (!userModel) {
+                return handleError(res, 400, `user: "${user}" doesn't exist`)
+            }
+
+            const books = userModel.books
+            let publicBooks = []
+            for (const book of books) {
+                const bookModel = await Book.findById(book)
+                if (!bookModel) {
+                    return handleError(res, 400, `book: "${book}" doesn't exist`)
+                }
+                const isPublic = bookModel.isPublic
+                if (isPublic) {
+                    publicBooks.push(book)
+                }
+            }
+
+            return handleResponse(res, {
+                publicBooks,
+            })
+        }
 
         const Model = require(`../models/${model}`); // Assuming your models are in a 'models' folder
 
