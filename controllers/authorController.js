@@ -83,17 +83,17 @@ const signUp = async (req, res) => {
 
         // Create a new author document in MongoDB
         const authorModel = await Author.create({
-            pseudonym: pseudonym ? pseudonym : undefined,
-            email: email ? email : undefined,
-            password: hashedPassword ? hashedPassword : undefined,
-            activated: activated ? activated : undefined,
+            pseudonym: pseudonym ? pseudonym : '',
+            email: email ? email : '',
+            password: hashedPassword ? hashedPassword : '',
+            activated: activated ? activated : false,
 
-            firstName: firstName ? firstName : undefined,
-            lastName: lastName ? lastName : undefined,
+            firstName: firstName ? firstName : '',
+            lastName: lastName ? lastName : '',
 
-            headshotAndCover: headshotAndCover ? headshotAndCover : undefined,
+            headshotAndCover: headshotAndCover ? headshotAndCover : '',
 
-            pushToken: pushToken ? pushToken : undefined,
+            pushToken: pushToken ? pushToken : '',
 
             createdAt: createdAt ? createdAt : new Date()
         })
