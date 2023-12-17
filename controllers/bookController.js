@@ -70,7 +70,7 @@ const saveBook = async (req, res) => {
             scraps,
             title,
             description,
-            isPublic: isPublic ? false : true,
+            isPublic: isPublic ? isPublic : false,
             representative,
             likes,
             createdAt: createdAt ? createdAt : new Date()
