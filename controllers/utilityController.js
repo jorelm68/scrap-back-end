@@ -38,7 +38,7 @@ const get = async (req, res) => {
 
             let relationship = 'none'
             if (userModel.friends.includes(id)) {
-                relationship = 'friends'
+                relationship = 'friend'
             }
             else if (userModel.outgoingFriendRequests.includes(id)) {
                 relationship = 'outgoingFriendRequest'
