@@ -155,11 +155,11 @@ const removeScrap = async (req, res) => {
 
         const { book, scrap } = req.body
 
-        const bookModel = Book.findById(book)
+        const bookModel = await Book.findById(book)
         if (!bookModel) {
             return handleError(res, 400, `book: "${book}" doesn't exist`)
         }
-        const scrapModel = Scrap.findById(scrap)
+        const scrapModel = await Scrap.findById(scrap)
         if (!scrapModel) {
             return handleError(res, 400, `scrap: "${scrap}" doesn't exist`)
         }

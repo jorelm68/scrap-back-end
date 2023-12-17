@@ -56,7 +56,16 @@ const signUp = async (req, res) => {
             body('password').exists().withMessage('body: password is required')
         ], validationResult)
 
-        const { pseudonym, email, password, firstName, lastName, pushToken, createdAt } = req.body
+        const {
+            pseudonym,
+            email,
+            password,
+            firstName,
+            lastName,
+            pushToken,
+            createdAt,
+            headshotAndCover,
+        } = req.body
 
         // Check if the pseudonym is already taken
         const existingPseudonym = await Author.findOne({ pseudonym })
@@ -74,15 +83,17 @@ const signUp = async (req, res) => {
 
         // Create a new author document in MongoDB
         const authorModel = await Author.create({
-            pseudonym,
-            email,
-            password: hashedPassword,
-            activated: false,
+            pseudonym: pseudonym ? pseudonym : undefined,
+            email: email ? email : undefined,
+            password: hashedPassword ? hashedPassword : undefined,
+            activated: activated ? activated : undefined,
 
-            firstName,
-            lastName,
+            firstName: firstName ? firstName : undefined,
+            lastName: lastName ? lastName : undefined,
 
-            pushToken,
+            headshotAndCover: headshotAndCover ? headshotAndCover : undefined,
+
+            pushToken: pushToken ? pushToken : undefined,
 
             createdAt: createdAt ? createdAt : new Date()
         })
