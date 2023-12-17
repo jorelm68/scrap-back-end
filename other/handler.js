@@ -316,6 +316,17 @@ const deepDeleteBook = async (req, res, _id) => {
         handleMongoFilter('Author', 'likedBooks', _id),
     ])
 
+    // Set the book's scraps' book to empty
+    for (const scrap of bookModel.scraps) {
+        const scrapModel = await Scrap.findById(scrap)
+        if (!scrapModel) {
+            return handleError(res, 400, `scrap: "${scrap}" doesn't exist`)
+        }
+
+        scrapModel.book = ''
+        await scrapModel.save()
+    }
+
     // Delete the book from MongoDB
     await Book.findOneAndDelete({ _id })
 }
@@ -328,44 +339,43 @@ const deepDeleteScrap = async (req, res, _id) => {
 
     // Deep delete all actions associated with the scrap
     // Delete any action from any author that references the book id
-    // const deleteActions = []
-    // const actions = await Action.find({
-    //     $or: [
-    //         { senderScrap: _id },
-    //         { targetScrap: _id }
-    //     ]
-    // }, '_id');
+    const deleteActions = []
+    const actions = await Action.find({
+        $or: [
+            { senderScrap: _id },
+            { targetScrap: _id }
+        ]
+    }, '_id');
 
-    // for (const action of actions) {
-    //     deleteActions.push(deepDeleteAction(req, res, action))
-    // }
-    // await Promise.all(deleteActions)
+    for (const action of actions) {
+        deleteActions.push(deepDeleteAction(req, res, action))
+    }
+    await Promise.all(deleteActions)
 
     // Remove the scrap from the author's headshot and cover if currently set
-    // const retrograph = scrapModel.retrograph
-    // const prograph = scrapModel.prograph
-    // const author = scrapModel.author
-    // const authorModel = Author.findById(author)
-    // if (authorModel.headshot === retrograph) {
-    //     authorModel.headshot = ''
-    // }
-    // if (authorModel.cover === prograph) {
-    //     authorModel.cover = ''
-    // }
+    const retrograph = scrapModel.retrograph
+    const prograph = scrapModel.prograph
+    const author = scrapModel.author
+    const authorModel = Author.findById(author)
+    if (authorModel.headshot === retrograph) {
+        authorModel.headshot = ''
+    }
+    if (authorModel.cover === prograph) {
+        authorModel.cover = ''
+    }
 
     // Delete the scrap id from any book's cover
-    // await Book.updateMany(
-    //     { $or: [{ cover: prograph }, { cover: retrograph }] },
-    //     { $set: { cover: '' } }
-    // )
+    await Book.updateMany(
+        { $or: [{ cover: prograph }, { cover: retrograph }] },
+        { $set: { cover: '' } }
+    )
 
     // Delete the scrap from the book it is in
-    // const bookModel = Book.findById(scrapModel.book)
-    // bookModel.scraps.pull(_id)
-    // await bookModel.save()
+    const bookModel = Book.findById(scrapModel.book)
+    bookModel.scraps.pull(_id)
+    await bookModel.save()
 
     // Delete the scrap from the author's library
-    const authorModel = await Author.findById(scrapModel.author)
     authorModel.scraps.pull(_id)
     await authorModel.save()
 

@@ -12,7 +12,7 @@ const {
     handleResponse,
     handleScrapSort
 } = require('../other/handler')
-const { body, validationResult } = require('express-validator')
+const { body, param, validationResult } = require('express-validator')
 
 const exists = async (req, res) => {
     const code = async (req, res) => {
@@ -63,7 +63,7 @@ const saveBook = async (req, res) => {
         if (!authorModel) {
             return handleError(res, 400, `author: "${author}" doesn't exist`)
         }
-        
+
         // Create the document in MongoDB
         const bookModel = new Book({
             author,
@@ -300,10 +300,14 @@ const removeLike = async (req, res) => {
 const deleteBooks = async (req, res) => {
     const code = async (req, res) => {
         await handleInputValidation(req, res, [
-            body('books').exists().withMessage('body: book is required'),
+            param('books').exists().withMessage('param: books is required'),
         ], validationResult)
 
-        const { books } = req.body
+        const {
+            books: booksRaw
+        } = req.params
+
+        const books = JSON.parse(booksRaw)
 
         // Deep delete each book
         const deleteBooks = []

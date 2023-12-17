@@ -12,7 +12,7 @@ const {
     handleError,
 } = require('../other/handler')
 const { ObjectId } = require('mongodb')
-const { body, validationResult } = require('express-validator')
+const { body, param, validationResult } = require('express-validator')
 
 const exists = async (req, res) => {
     const code = async (req, res) => {
@@ -115,10 +115,10 @@ const saveScrap = async (req, res) => {
 const deleteScraps = async (req, res) => {
     const code = async (req, res) => {
         await handleInputValidation(req, res, [
-            body('scraps').exists().withMessage('body: scraps is required'),
+            param('scraps').exists().withMessage('param: scraps is required'),
         ], validationResult)
 
-        const { scraps } = req.body
+        const { scraps } = req.params
         const parsedScraps = JSON.parse(scraps)
 
         // Deep delete each scrap

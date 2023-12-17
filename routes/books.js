@@ -20,6 +20,6 @@ router.patch('/removeScrap', removeScrap)
 router.patch('/addLike', addLike)
 router.patch('/removeLike', removeLike)
 
-router.patch('/deleteBooks', deleteBooks)
+router.delete('/deleteBooks/:books', deleteBooks)
 
 module.exports = router
