@@ -31,6 +31,7 @@ const handleRequest = async (req, res, code) => {
     }
 }
 const handleResponse = async (res, data) => {
+    console.log(data)
     return res.status(200).json(data)
 }
 const handleInputValidation = async (req, res, checks, validationResult) => {

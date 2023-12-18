@@ -31,6 +31,9 @@ const get = async (req, res) => {
 
         const { model, id, key, user } = req.params
         if (key === 'relationship') {
+            if (id === user) {
+                return handleResponse(res, { relationship: 'self' })
+            }
             const userModel = await Author.findById(user)
             if (!userModel) {
                 return handleError(res, 400, `user: "${user}" doesn't exist`)
@@ -208,7 +211,47 @@ const reverseGeocode = async (req, res) => {
 }
 const authorSearch = async (req, res) => {
     const code = async (req, res) => {
+        await handleInputValidation(req, res, [
+            body('author').exists().withMessage('body: author is required'),
+            body('author').isMongoId().withMessage('body: author must be MongoId'),
+            body('search').exists().withMessage('body: search is required'),
+        ], validationResult)
 
+        const { author, search } = req.body
+
+        // Get the author searching
+        const authorModel = await Author.findById(author)
+        if (!authorModel) {
+            return handleError(res, 400, `author: "${author}" doesn't exist`)
+        }
+
+        // MongoDB search query
+        const result = await Author.find({
+            $or: [
+                { pseudonym: { $regex: search, $options: 'i' } }, // Case-insensitive search for pseudonym
+                {
+                    $and: [
+                        { $or: [{ firstName: { $regex: search, $options: 'i' } }, { lastName: { $regex: search, $options: 'i' } }] }, // Case-insensitive search for firstName or lastName
+                    ]
+                }
+            ]
+        })
+            .sort({ pseudonym: -1, firstName: -1, lastName: -1 }) // Sort by relevance
+
+        // Extracting IDs from the results
+        const relevantAuthors = result.slice(0, 10).map(author => author._id)
+
+        return handleResponse(res, {
+            authors: relevantAuthors,
+        })
+
+        // I want the logic of this function to search through all Author documents and prioritize:
+        // authorModel.pseudonym
+        // then prioritze
+        // authorModel.firstName and authorModel.lastName
+
+        // Then I want it to build an array of 10 authorModel._ids sorted in the order of how relevant
+        // the search is to the author
     }
     await handleRequest(req, res, code)
 }
