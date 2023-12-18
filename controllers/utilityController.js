@@ -263,10 +263,42 @@ const scrapSearch = async (req, res) => {
 }
 const bookSearch = async (req, res) => {
     const code = async (req, res) => {
+        await handleInputValidation(req, res, [
+            body('author').exists().withMessage('body: author is required'),
+            body('author').isMongoId().withMessage('body: author must be MongoId'),
+            body('search').exists().withMessage('body: search is required'),
+        ], validationResult)
 
+        const { author, search } = req.body
+
+        // Get the author searching
+        const authorModel = await Author.findById(author)
+        if (!authorModel) {
+            return handleError(res, 400, `author: "${author}" doesn't exist`)
+        }
+
+        // MongoDB query to search within Book documents based on title, description, and place
+        const result = await Book.find({
+            $or: [
+                { title: { $regex: search, $options: 'i' } },
+                { place: { $regex: search, $options: 'i' } },
+                { description: { $regex: search, $options: 'i' } }
+            ]
+        })
+            .select('_id') // Select only the _id field
+            .sort({ title: -1, place: -1, description: -1 }) // Sort by relevance
+
+        // Extracting only the IDs from the query result
+        const bookIds = result.slice(0, 10).map(book => book._id)
+
+        // Return the list of relevant book IDs
+        return handleResponse(res, {
+            books: bookIds
+        })
     }
     await handleRequest(req, res, code)
 }
+
 const generalSearch = async (req, res) => {
     const code = async (req, res) => {
 
