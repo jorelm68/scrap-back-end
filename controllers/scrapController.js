@@ -10,6 +10,9 @@ const {
     handleInputValidation,
     handleResponse,
     handleError,
+    getCoordinates,
+    calculateMiles,
+    handleScrapSort,
 } = require('../other/handler')
 const { ObjectId } = require('mongodb')
 const { body, param, validationResult } = require('express-validator')
@@ -105,7 +108,15 @@ const saveScrap = async (req, res) => {
         ])
 
         // Add the scrap to the author's scraps array
-        authorModel.scraps.push(scrap._id)
+        let scraps = [...authorModel.scraps, scrap._id]
+        scraps = await handleScrapSort(scraps)
+        
+        authorModel.scraps = await handleScrapSort(scraps)
+
+        // Recalculate the miles traveled
+        const coordinates = await getCoordinates(scraps)
+        const miles = calculateMiles(coordinates)
+        authorModel.miles = miles
         await authorModel.save()
 
         return handleResponse(res, { scrap: scrap._id })

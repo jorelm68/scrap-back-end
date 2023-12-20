@@ -64,6 +64,7 @@ const signUp = async (req, res) => {
             lastName,
             pushToken,
             createdAt,
+            miles,
             headshotAndCover,
         } = req.body
 
@@ -92,6 +93,8 @@ const signUp = async (req, res) => {
             lastName: lastName ? lastName : '',
 
             headshotAndCover: headshotAndCover ? headshotAndCover : '',
+
+            miles: miles ? miles : 0,
 
             pushToken: pushToken ? pushToken : '',
 

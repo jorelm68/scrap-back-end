@@ -16,6 +16,7 @@ const {
     handleResponse,
     handleResize,
     sendEmail,
+    getCoordinates,
 } = require('../other/handler')
 const { body, param, validationResult } = require('express-validator')
 const saltRounds = 10
@@ -539,18 +540,7 @@ const scrapCoordinates = async (req, res) => {
         const { scraps: scrapsRaw } = req.body
         const scraps = JSON.parse(scrapsRaw)
 
-        let coordinates = []
-        for (const scrap of scraps) {
-            const scrapModel = await Scrap.findById(scrap)
-            if (!scrapModel) {
-                return handleError(res, 400, `scrap: "${scrap}" doesn't exist`)
-            }
-
-            coordinates.push({
-                latitude: scrapModel.latitude,
-                longitude: scrapModel.longitude,
-            })
-        }
+        const coordinates = await getCoordinates(req, res, scraps)
 
         return handleResponse(res, {
             coordinates,

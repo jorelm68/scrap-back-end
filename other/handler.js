@@ -380,6 +380,12 @@ const deepDeleteScrap = async (req, res, _id) => {
     authorModel.scraps.pull(_id)
     await authorModel.save()
 
+    // Recalculate the miles traveled
+    const coordinates = await getCoordinates(authorModel.scraps)
+    const miles = calculateMiles(coordinates)
+    authorModel.miles = miles
+    await authorModel.save()
+
     // Delete the Scrap's prograph and retrograph from AWS W3 storage
     handleS3Delete(`photos/${scrapModel.prograph}.jpg`)
     handleS3Delete(`photos/${scrapModel.retrograph}.jpg`)
@@ -464,6 +470,51 @@ const handleScrapSort = async (scraps) => {
     return sortedIds;
 }
 
+const getCoordinates = async (req, res, scraps) => {
+    let coordinates = []
+    for (const scrap of scraps) {
+        const scrapModel = await Scrap.findById(scrap)
+        if (!scrapModel) {
+            return handleError(res, 400, `scrap: "${scrap}" doesn't exist`)
+        }
+
+        coordinates.push({
+            latitude: scrapModel.latitude,
+            longitude: scrapModel.longitude,
+        })
+    }
+
+    return coordinates
+}
+
+const calculateDistance = (lat1, lon1, lat2, lon2) => {
+    const R = 6371; // Radius of the Earth in kilometers
+    const dLat = (lat2 - lat1) * (Math.PI / 180); // Difference in latitude in radians
+    const dLon = (lon2 - lon1) * (Math.PI / 180); // Difference in longitude in radians
+    const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(lat1 * (Math.PI / 180)) *
+        Math.cos(lat2 * (Math.PI / 180)) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const distance = R * c; // Distance in kilometers
+    return distance;
+}
+const calculateMiles = (coordinates) => {
+    let totalDistance = 0;
+
+    for (let i = 0; i < coordinates.length - 1; i++) {
+        const { latitude: lat1, longitude: lon1 } = coordinates[i];
+        const { latitude: lat2, longitude: lon2 } = coordinates[i + 1];
+        const distance = calculateDistance(lat1, lon1, lat2, lon2);
+        totalDistance += distance;
+    }
+
+    // Convert total distance from kilometers to miles
+    const totalMiles = totalDistance * 0.621371; // 1 kilometer = 0.621371 miles
+    return totalMiles;
+}
 
 module.exports = {
     handleError,
@@ -483,4 +534,6 @@ module.exports = {
     deepDeleteScrap,
     sendEmail,
     handleScrapSort,
+    getCoordinates,
+    calculateMiles,
 }

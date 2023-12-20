@@ -32,6 +32,7 @@ const authorSchema = new Schema({
     scraps: [String],
     books: [String],
     bookContributions: [String],
+    miles: Number,
 
     likedScraps: [String],
     likedBooks: [String],
