@@ -118,6 +118,12 @@ const get = async (req, res) => {
                 relationship = 'outgoingFriendRequest'
             }
 
+            if (relationship === 'self') {
+                return handleResponse(res, {
+                    profileBooks: authorModel.books
+                })
+            }
+
             const books = authorModel.books
             let filtered = []
             for (const book of books) {
@@ -130,12 +136,14 @@ const get = async (req, res) => {
                 if (isPublic) {
                     filtered.push(book)
                 }
-                else if (['self', 'friend'].includes(relationship)) {
+                else if (['friend'].includes(relationship)) {
                     filtered.push(book)
                 }
             }
 
-            return handleResponse(res, { profileBooks: filtered })
+            return handleResponse(res, {
+                profileBooks: filtered
+            })
         }
         else if (key === 'unbookedScraps') {
             const authorModel = await Author.findById(id)
