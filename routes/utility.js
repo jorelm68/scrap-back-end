@@ -9,6 +9,8 @@ const {
     bookSearch,
     generalSearch,
     question,
+    addThread,
+    removeThread,
 } = require('../controllers/utilityController')
 
 const router = express.Router()
@@ -23,6 +25,9 @@ router.post('/authorSearch', authorSearch)
 router.post('/scrapSearch', scrapSearch)
 router.post('/bookSearch', bookSearch)
 router.post('/generalSearch', generalSearch)
+
+router.patch('/addThread', addThread)
+router.patch('/removeThread', removeThread)
 
 router.post('/question', question)
 

@@ -55,6 +55,7 @@ const saveBook = async (req, res) => {
             representative,
             likes,
             createdAt,
+            threads,
         } = req.body
 
         const scraps = JSON.parse(scrapsRaw)
@@ -66,13 +67,14 @@ const saveBook = async (req, res) => {
 
         // Create the document in MongoDB
         const bookModel = new Book({
-            author,
-            scraps,
-            title,
-            description,
+            author: author ? author : '',
+            scraps: scraps ? scraps : [],
+            title: title ? title : '',
+            description: description ? description : '',
             isPublic: isPublic ? isPublic : false,
-            representative,
-            likes,
+            representative: representative ? representative : '',
+            likes: likes ? likes : [],
+            threads: threads ? threads : [],
             createdAt: createdAt ? createdAt : new Date()
         })
         await bookModel.save()

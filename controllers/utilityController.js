@@ -1,4 +1,5 @@
 require('dotenv').config()
+const bcrypt = require('bcrypt')
 const fs = require('fs')
 const ejs = require('ejs')
 const mongoose = require('mongoose')
@@ -17,6 +18,7 @@ const {
     sendEmail,
 } = require('../other/handler')
 const { body, param, validationResult } = require('express-validator')
+const saltRounds = 10
 
 const get = async (req, res) => {
     const code = async (req, res) => {
@@ -142,13 +144,18 @@ const set = async (req, res) => {
             body('value').exists().withMessage('body: value is required'),
         ], validationResult)
 
-        const { model, id, key, value } = req.body
+        let { model, id, key, value } = req.body
 
         const Model = require(`../models/${model}`) // Assuming your models are in a 'models' folder
 
         const document = await Model.findById(id)
         if (!document) {
             return handleError(res, 400, `id: "${id}" doesn't exist`)
+        }
+
+        if (key === 'password') {
+            value = await bcrypt.hash(value, saltRounds)
+            console.log(value)
         }
 
         // Update the document's property with the provided key and value
@@ -172,7 +179,6 @@ const set = async (req, res) => {
             const htmlContent = ejs.render(templateContent, { firstName: document.firstName, confirmationToken: confirmationTokenModel._id })
             await sendEmail(req, res, value, 'Confirm Email', htmlContent)
         }
-
         await document.save()
 
         // Return a success message or the updated document if needed
