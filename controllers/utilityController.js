@@ -530,6 +530,71 @@ const question = async (req, res) => {
     await handleRequest(req, res, code)
 }
 
+const scrapCoordinates = async (req, res) => {
+    const code = async (req, res) => {
+        await handleInputValidation(req, res, [
+            body('scraps').exists().withMessage('body: scraps is required'),
+        ], validationResult)
+
+        const { scraps: scrapsRaw } = req.body
+        const scraps = JSON.parse(scrapsRaw)
+
+        let coordinates = []
+        for (const scrap of scraps) {
+            const scrapModel = await Scrap.findById(scrap)
+            if (!scrapModel) {
+                return handleError(res, 400, `scrap: "${scrap}" doesn't exist`)
+            }
+
+            coordinates.push({
+                latitude: scrapModel.latitude,
+                longitude: scrapModel.longitude,
+            })
+        }
+
+        return handleResponse(res, {
+            coordinates,
+        })
+    }
+    await handleRequest(req, res, code)
+}
+
+const bookCoordinates = async (req, res) => {
+    const code = async (req, res) => {
+        await handleInputValidation(req, res, [
+            body('books').exists().withMessage('body: books is required'),
+        ], validationResult)
+
+        const { books: booksRaw } = req.body
+
+        const books = JSON.parse(booksRaw)
+
+        let coordinates = []
+        for (const book of books) {
+            const bookModel = await Book.findById(book)
+            if (!bookModel) {
+                return handleResponse(res, 400, `book: "${book}" doesn't exist`)
+            }
+
+            const representative = bookModel.representative
+            const scrapModel = await Scrap.findById(representative)
+            if (!scrapModel) {
+                return handleError(res, 400, `scrap: "${scrap}" doesn't exist`)
+            }
+
+            coordinates.push({
+                latitude: scrapModel.latitude,
+                longitude: scrapModel.longitude,
+            })
+        }
+
+        return handleResponse(res, {
+            coordinates,
+        })
+    }
+    await handleRequest(req, res, code)
+}
+
 module.exports = {
     get,
     getPhoto,
@@ -542,4 +607,6 @@ module.exports = {
     addThread,
     removeThread,
     question,
+    scrapCoordinates,
+    bookCoordinates,
 }

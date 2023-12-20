@@ -11,6 +11,8 @@ const {
     question,
     addThread,
     removeThread,
+    scrapCoordinates,
+    bookCoordinates,
 } = require('../controllers/utilityController')
 
 const router = express.Router()
@@ -30,5 +32,8 @@ router.patch('/addThread', addThread)
 router.patch('/removeThread', removeThread)
 
 router.post('/question', question)
+
+router.post('/scrapCoordinates', scrapCoordinates)
+router.post('/bookCoordinates', bookCoordinates)
 
 module.exports = router
