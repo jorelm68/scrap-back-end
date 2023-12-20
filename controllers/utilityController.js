@@ -55,12 +55,12 @@ const get = async (req, res) => {
             return handleResponse(res, { relationship })
         }
         else if (['headshot', 'cover'].includes(key)) {
-            const userModel = await Author.findById(id)
-            if (!userModel) {
-                return handleError(res, 400, `user: "${user}" doesn't exist`)
+            const authorModel = await Author.findById(id)
+            if (!authorModel) {
+                return handleError(res, 400, `author: "${id}" doesn't exist`)
             }
 
-            const scrap = userModel.headshotAndCover
+            const scrap = authorModel.headshotAndCover
             const scrapModel = scrapModel.findById(scrap)
             if (!scrapModel) {
                 return handleError(res, 400, `scrap: "${scrap}" doesn't exist`)
@@ -71,12 +71,12 @@ const get = async (req, res) => {
             })
         }
         else if (key === 'publicBooks') {
-            const userModel = await Author.findById(id)
-            if (!userModel) {
-                return handleError(res, 400, `user: "${user}" doesn't exist`)
+            const authorModel = await Author.findById(id)
+            if (!authorModel) {
+                return handleError(res, 400, `author: "${id}" doesn't exist`)
             }
 
-            const books = userModel.books
+            const books = authorModel.books
             let publicBooks = []
             for (const book of books) {
                 const bookModel = await Book.findById(book)
@@ -93,13 +93,57 @@ const get = async (req, res) => {
                 publicBooks,
             })
         }
-        else if (key === 'unbookedScraps') {
-            const userModel = await Author.findById(id)
+        else if (key === 'profileBooks') {
+            const authorModel = await Author.findById(id)
+            if (!authorModel) {
+                return handleError(res, 400, `author: "${id}" doesn't exist`)
+            }
+
+            const userModel = await Author.findById(user)
             if (!userModel) {
                 return handleError(res, 400, `user: "${user}" doesn't exist`)
             }
 
-            const scraps = userModel.scraps
+            let relationship = 'none'
+            if (user === id) {
+                relationship = 'self'
+            }
+            else if (userModel.friends.includes(id)) {
+                relationship = 'friend'
+            }
+            else if (userModel.incomingFriendRequests.includes(id)) {
+                relationship = 'incomingFriendRequest'
+            }
+            else if (userModel.outgoingFriendRequests.includes(id)) {
+                relationship = 'outgoingFriendRequest'
+            }
+
+            const books = authorModel.books
+            let filtered = []
+            for (const book of books) {
+                const bookModel = await Book.findById(book)
+                if (!bookModel) {
+                    return handleError(res, 400, `book: "${book}" doesn't exist`)
+                }
+
+                const isPublic = bookModel.isPublic
+                if (isPublic) {
+                    filtered.push(book)
+                }
+                else if (['self', 'friend'].includes(relationship)) {
+                    filtered.push(book)
+                }
+            }
+
+            return handleResponse(res, { profileBooks: filtered })
+        }
+        else if (key === 'unbookedScraps') {
+            const authorModel = await Author.findById(id)
+            if (!authorModel) {
+                return handleError(res, 400, `author: "${id}" doesn't exist`)
+            }
+
+            const scraps = authorModel.scraps
             let unbookedScraps = []
             for (const scrap of scraps) {
                 const scrapModel = await Scrap.findById(scrap)
@@ -273,9 +317,11 @@ const bookSearch = async (req, res) => {
             body('author').exists().withMessage('body: author is required'),
             body('author').isMongoId().withMessage('body: author must be MongoId'),
             body('search').exists().withMessage('body: search is required'),
+            body('remove').exists().withMessage('body: remove is required'),
         ], validationResult)
 
-        const { author, search } = req.body
+        const { author, search, remove: removeRaw } = req.body
+        const remove = JSON.parse(removeRaw)
 
         // Get the author searching
         const authorModel = await Author.findById(author)
@@ -291,11 +337,46 @@ const bookSearch = async (req, res) => {
                 { description: { $regex: search, $options: 'i' } }
             ]
         })
-            .select('_id') // Select only the _id field
             .sort({ title: -1, place: -1, description: -1 }) // Sort by relevance
 
-        // Extracting only the IDs from the query result
-        const bookIds = result.slice(0, 10).map(book => book._id)
+        // Remove private books from the query
+        let filtered = [...result]
+
+        if (remove.includes('selfBooks')) {
+            filtered = filtered.filter((bookModel) => {
+                return bookModel.author !== author
+            })
+        }
+
+        if (remove.includes('privateBooks')) {
+            filtered = filtered.filter((bookModel) => {
+                return !bookModel.isPublic
+            })
+        }
+
+        if (remove.includes('restrictedBooks')) {
+            filtered = filtered.filter((bookModel) => {
+                const creator = bookModel.author
+                const isPublic = bookModel.isPublic
+                let relationship = 'none'
+                if (author === creator) {
+                    relationship = 'self'
+                }
+                else if (authorModel.friends.includes(creator)) {
+                    relationship = 'friend'
+                }
+                else if (authorModel.incomingFriendRequests.includes(creator)) {
+                    relationship = 'incomingFriendRequest'
+                }
+                else if (authorModel.outgoingFriendRequests.includes(creator)) {
+                    relationship = 'outgoingFriendRequest'
+                }
+
+                return !(!isPublic && !['self', 'friend'].includes(relationship))
+            })
+        }
+
+        const bookIds = filtered.slice(0, 10).map(book => book._id)
 
         // Return the list of relevant book IDs
         return handleResponse(res, {
