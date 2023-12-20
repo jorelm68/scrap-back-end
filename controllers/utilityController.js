@@ -145,6 +145,27 @@ const get = async (req, res) => {
                 profileBooks: filtered
             })
         }
+        else if (key === 'feed') {
+            // Fetch the current user's friends
+            const authorModel = await Author.findById(id)
+            if (!authorModel) {
+                return handleError(res, 400, `author: "${id}" doesn't exist`)
+            }
+
+            const friends = authorModel.friends
+
+            // Find books posted by the current user and their friends
+            const results = await Book.find({
+                $or: [
+                    { author: id }, // Books posted by the current user
+                    { author: { $in: friends } }, // Books posted by friends
+                ]
+            }).sort({ createdAt: -1 }) // Sort by creation date (descending)
+
+            const bookIds = results.slice(0, 10).map(book => book._id)
+
+            return handleResponse(res, { feed: bookIds })
+        }
         else if (key === 'unbookedScraps') {
             const authorModel = await Author.findById(id)
             if (!authorModel) {
