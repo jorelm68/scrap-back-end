@@ -225,7 +225,6 @@ const forgotPassword = async (req, res) => {
         }
 
         const existingPasswordToken = await PasswordToken.findOne({ email })
-        console.log(existingPasswordToken)
         if (existingPasswordToken) {
             if (existingPasswordToken.expirationDate < new Date()) {
                 await existingPasswordToken.deleteOne()

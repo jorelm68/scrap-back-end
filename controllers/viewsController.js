@@ -53,7 +53,6 @@ const activateAccount = async (req, res) => {
         const { confirmationToken } = req.params
 
         const confirmationTokenModel = await ConfirmationToken.findById(confirmationToken)
-        console.log(confirmationToken, confirmationTokenModel)
         if (!confirmationTokenModel) {
             return res.render('activateAccountError', {})
         }
@@ -77,7 +76,6 @@ const changeEmail = async (req, res) => {
         const { confirmationToken } = req.params
 
         const confirmationTokenModel = await ConfirmationToken.findById(confirmationToken)
-        console.log(confirmationToken, confirmationTokenModel)
         if (!confirmationTokenModel) {
             return res.render('changeEmailError', {})
         }

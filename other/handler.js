@@ -382,7 +382,7 @@ const deepDeleteScrap = async (req, res, _id) => {
 
     // Recalculate the miles traveled
     const coordinates = await getCoordinates(authorModel.scraps)
-    const miles = calculateMiles(coordinates)
+    const miles = await calculateMiles(coordinates)
     authorModel.miles = miles
     await authorModel.save()
 
@@ -470,13 +470,10 @@ const handleScrapSort = async (scraps) => {
     return sortedIds;
 }
 
-const getCoordinates = async (req, res, scraps) => {
+const getCoordinates = async (scraps) => {
     let coordinates = []
     for (const scrap of scraps) {
         const scrapModel = await Scrap.findById(scrap)
-        if (!scrapModel) {
-            return handleError(res, 400, `scrap: "${scrap}" doesn't exist`)
-        }
 
         coordinates.push({
             latitude: scrapModel.latitude,
@@ -501,7 +498,7 @@ const calculateDistance = (lat1, lon1, lat2, lon2) => {
     const distance = R * c; // Distance in kilometers
     return distance;
 }
-const calculateMiles = (coordinates) => {
+const calculateMiles = async (coordinates) => {
     let totalDistance = 0;
 
     for (let i = 0; i < coordinates.length - 1; i++) {

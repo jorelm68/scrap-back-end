@@ -17,6 +17,7 @@ const {
     handleResize,
     sendEmail,
     getCoordinates,
+    calculateMiles,
 } = require('../other/handler')
 const { body, param, validationResult } = require('express-validator')
 const saltRounds = 10
@@ -540,7 +541,7 @@ const scrapCoordinates = async (req, res) => {
         const { scraps: scrapsRaw } = req.body
         const scraps = JSON.parse(scrapsRaw)
 
-        const coordinates = await getCoordinates(req, res, scraps)
+        const coordinates = await getCoordinates(scraps)
 
         return handleResponse(res, {
             coordinates,
@@ -585,6 +586,21 @@ const bookCoordinates = async (req, res) => {
     await handleRequest(req, res, code)
 }
 
+const calcMiles = async (req, res) => {
+    const code = async (req, res) => {
+        const { scraps: scrapsRaw } = req.body
+        const scraps = JSON.parse(scrapsRaw)
+
+        const coordinates = await getCoordinates(scraps)
+        const miles = await calculateMiles(coordinates)
+
+        return handleResponse(res, {
+            miles,
+        })
+    }
+    await handleRequest(req, res, code)
+}
+
 module.exports = {
     get,
     getPhoto,
@@ -599,4 +615,5 @@ module.exports = {
     question,
     scrapCoordinates,
     bookCoordinates,
+    calcMiles,
 }

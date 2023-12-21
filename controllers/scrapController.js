@@ -108,16 +108,15 @@ const saveScrap = async (req, res) => {
         ])
 
         // Add the scrap to the author's scraps array
-        let scraps = [...authorModel.scraps, scrap._id]
-        scraps = await handleScrapSort(scraps)
-        
-        authorModel.scraps = await handleScrapSort(scraps)
+        const scraps = await handleScrapSort([...authorModel.scraps, scrap._id])
+        authorModel.scraps = scraps
 
         // Recalculate the miles traveled
         const coordinates = await getCoordinates(scraps)
-        const miles = calculateMiles(coordinates)
+        const miles = await calculateMiles(coordinates)
         authorModel.miles = miles
         await authorModel.save()
+
 
         return handleResponse(res, { scrap: scrap._id })
     }
