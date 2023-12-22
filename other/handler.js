@@ -16,6 +16,7 @@ const s3 = new AWS.S3({
 })
 
 const handleError = (res, status, error) => {
+    console.log('ERROR', error)
     res.status(status)
     throw new Error(error)
 }

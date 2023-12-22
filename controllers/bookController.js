@@ -12,7 +12,8 @@ const {
     handleResponse,
     handleScrapSort,
     getCoordinates,
-    calculateMiles
+    calculateMiles,
+    handleError
 } = require('../other/handler')
 const { body, param, validationResult } = require('express-validator')
 
@@ -61,6 +62,8 @@ const saveBook = async (req, res) => {
         } = req.body
 
         const scraps = JSON.parse(scrapsRaw)
+        const coordinates = await getCoordinates(scraps)
+        const miles = await calculateMiles(coordinates)
 
         const authorModel = await Author.findById(author)
         if (!authorModel) {
@@ -77,6 +80,7 @@ const saveBook = async (req, res) => {
             representative: representative ? representative : '',
             likes: likes ? likes : [],
             threads: threads ? threads : [],
+            miles: miles ? miles : 0,
             createdAt: createdAt ? createdAt : new Date()
         })
         await bookModel.save()
