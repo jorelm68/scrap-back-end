@@ -10,7 +10,9 @@ const {
     handleInputValidation,
     deepDeleteBook,
     handleResponse,
-    handleScrapSort
+    handleScrapSort,
+    getCoordinates,
+    calculateMiles
 } = require('../other/handler')
 const { body, param, validationResult } = require('express-validator')
 
@@ -139,6 +141,11 @@ const addScrap = async (req, res) => {
         // Set the book as the scrap's book
         scrapModel.book = book
 
+        // Recalculate the miles traveled
+        const coordinates = await getCoordinates(scraps)
+        const miles = await calculateMiles(coordinates)
+        bookModel.miles = miles
+
         await Promise.all([
             bookModel.save(),
             scrapModel.save(),
@@ -185,6 +192,13 @@ const removeScrap = async (req, res) => {
 
         // Set the scrap's book variable to empty
         scrapModel.book = ''
+
+        // Recalculate the miles traveled
+        const coordinates = await getCoordinates(bookModel.scraps.filter((value) => {
+            return value !== scrap
+        }))
+        const miles = await calculateMiles(coordinates)
+        bookModel.miles = miles
 
         await Promise.all([
             bookModel.save(),

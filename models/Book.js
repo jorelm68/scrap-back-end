@@ -6,6 +6,7 @@ const bookSchema = new Schema({
     title: String,
     description: String,
     isPublic: Boolean,
+    miles: Number,
     
     beginDate: Date,
     endDate: Date,
