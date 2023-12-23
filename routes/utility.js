@@ -13,6 +13,7 @@ const {
     removeThread,
     scrapCoordinates,
     bookCoordinates,
+    bookSort,
 } = require('../controllers/utilityController')
 
 const router = express.Router()
@@ -35,5 +36,7 @@ router.post('/question', question)
 
 router.post('/scrapCoordinates', scrapCoordinates)
 router.post('/bookCoordinates', bookCoordinates)
+
+router.post('/bookSort', bookSort)
 
 module.exports = router

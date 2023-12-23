@@ -588,6 +588,23 @@ const bookCoordinates = async (req, res) => {
     await handleRequest(req, res, code)
 }
 
+const bookSort = async (req, res) => {
+    const code = async (req, res) => {
+        await handleInputValidation(req, res, [
+            body('books').exists().withMessage('body: books is required'),
+        ], validationResult)
+
+        const { books: booksRaw } = req.body
+
+        const books = await handleBookSort(JSON.parse(booksRaw))
+
+        return handleResponse(res, {
+            books,
+        })
+    }
+    await handleRequest(req, res, code)
+}
+
 module.exports = {
     get,
     getPhoto,
@@ -602,4 +619,5 @@ module.exports = {
     question,
     scrapCoordinates,
     bookCoordinates,
+    bookSort,
 }

@@ -480,7 +480,7 @@ const handleBookSort = async (books) => {
             if (bookModel) {
                 bookDetails.push({
                     id: book,
-                    createdAt: bookModel.beginDate
+                    beginDate: bookModel.beginDate
                 })
             }
         } catch (error) {
