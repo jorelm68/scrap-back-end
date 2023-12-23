@@ -166,8 +166,9 @@ const get = async (req, res) => {
             }).sort({ createdAt: -1 }) // Sort by creation date (descending)
 
             const bookIds = results.slice(0, 10).map(book => book._id)
+            const sortedBookIds = await handleBookSort(bookIds)
 
-            return handleResponse(res, { feed: bookIds })
+            return handleResponse(res, { feed: sortedBookIds })
         }
         else if (key === 'unbookedScraps') {
             const authorModel = await Author.findById(id)
