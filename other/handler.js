@@ -286,6 +286,8 @@ const unThread = async (bookModel, scrapModel) => {
 }
 const thread = async (bookModel, scrapModel) => {
     if (bookModel && scrapModel) {
+        bookModel.threads.pull(scrapModel._id)
+        scrapModel.threads.pull(bookModel._id)
         bookModel.threads.push(scrapModel._id)
         scrapModel.threads.push(bookModel._id)
         await Promise.all([
@@ -306,6 +308,8 @@ const unLike = async (bookModel, authorModel) => {
 }
 const like = async (bookModel, authorModel) => {
     if (bookModel && authorModel) {
+        bookModel.likes.pull(authorModel._id)
+        authorModel.likedBooks.pull(authorModel._id)
         bookModel.likes.push(authorModel._id)
         authorModel.likedBooks.push(bookModel._id)
         await Promise.all([
