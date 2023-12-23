@@ -13,7 +13,8 @@ const {
     handleScrapSort,
     getCoordinates,
     calculateMiles,
-    handleError
+    handleError,
+    handleBookSort
 } = require('../other/handler')
 const { body, param, validationResult } = require('express-validator')
 
@@ -117,8 +118,8 @@ const saveBook = async (req, res) => {
             await scrapModel.save()
         }
 
-        // Add the book to author's books array
-        authorModel.books.push(bookModel._id)
+        // Add the book to author's books array (first sort them)
+        authorModel.books = await handleBookSort([...authorModel.books, bookModel._id])
         await authorModel.save()
 
         return handleResponse(res, { book: bookModel._id })
@@ -171,6 +172,7 @@ const addScrap = async (req, res) => {
         if (!lastScrapModel) {
             return handleError(res, 400, `lastScrap: "${lastScrapModel}" doesn't exist`)
         }
+        const oldBeginDate = bookModel.beginDate
         bookModel.beginDate = firstScrapModel.createdAt
         bookModel.endDate = lastScrapModel.createdAt
 
@@ -178,6 +180,17 @@ const addScrap = async (req, res) => {
             bookModel.save(),
             scrapModel.save(),
         ])
+
+        // Make sure to reorder the books in the author's profile if the beginDate changed
+        if (oldBeginDate !== firstScrapModel.createdAt) {
+            const authorModel = await Author.findById(bookModel.author)
+            if (!authorModel) {
+                return handleError(res, 400, `author: "${bookModel.author}" doesn't exist`)
+            }
+
+            authorModel.books = await handleBookSort(authorModel.books)
+            await authorModel.save()
+        }
 
         return handleResponse(res, { book, scrap })
     }
@@ -238,6 +251,7 @@ const removeScrap = async (req, res) => {
         if (!lastScrapModel) {
             return handleError(res, 400, `lastScrap: "${lastScrapModel}" doesn't exist`)
         }
+        const oldBeginDate = bookModel.beginDate
         bookModel.beginDate = firstScrapModel.createdAt
         bookModel.endDate = lastScrapModel.createdAt
 
@@ -245,6 +259,17 @@ const removeScrap = async (req, res) => {
             bookModel.save(),
             scrapModel.save(),
         ])
+
+        // Make sure to reorder the books in the author's profile if the beginDate changed
+        if (oldBeginDate !== firstScrapModel.createdAt) {
+            const authorModel = await Author.findById(bookModel.author)
+            if (!authorModel) {
+                return handleError(res, 400, `author: "${bookModel.author}" doesn't exist`)
+            }
+
+            authorModel.books = await handleBookSort(authorModel.books)
+            await authorModel.save()
+        }
 
         return handleResponse(res, { book, scrap })
     }
