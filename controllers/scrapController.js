@@ -13,6 +13,8 @@ const {
     getCoordinates,
     calculateMiles,
     handleScrapSort,
+    recalculateAuthorMiles,
+    sortAuthorScraps,
 } = require('../other/handler')
 const { ObjectId } = require('mongodb')
 const { body, param, validationResult } = require('express-validator')
@@ -59,7 +61,6 @@ const saveScrap = async (req, res) => {
             title,
             description,
             place,
-            location,
 
             latitude,
             longitude,
@@ -69,11 +70,6 @@ const saveScrap = async (req, res) => {
 
             createdAt,
         } = req.body
-
-        const authorModel = await Author.findById(author)
-        if (!authorModel) {
-            return handleError(res, 400, `author: "${author}" doesn't exist`)
-        }
 
         // Generate a unique MongoId for each image
         const prograph = new ObjectId();
@@ -107,16 +103,18 @@ const saveScrap = async (req, res) => {
             handleS3Put(`photos/${retrograph}.jpg`, iRetrograph),
         ])
 
-        // Add the scrap to the author's scraps array
-        const scraps = await handleScrapSort([...authorModel.scraps, scrap._id])
-        authorModel.scraps = scraps
+        const authorModel = await Author.findById(author)
+        if (authorModel) {
+            // Add the scrap to the author's library
+            authorModel.scraps.push(scrap._id)
+            await authorModel.save()
 
-        // Recalculate the miles traveled
-        const coordinates = await getCoordinates(scraps)
-        const miles = await calculateMiles(coordinates)
-        authorModel.miles = miles
-        await authorModel.save()
+            // Sort the author's scraps
+            await sortAuthorScraps(authorModel)
 
+            // Recalculate the total miles the author has traveled
+            await recalculateAuthorMiles(authorModel)
+        }
 
         return handleResponse(res, { scrap: scrap._id })
     }
@@ -128,13 +126,14 @@ const deleteScraps = async (req, res) => {
             param('scraps').exists().withMessage('param: scraps is required'),
         ], validationResult)
 
-        const { scraps } = req.params
-        const parsedScraps = JSON.parse(scraps)
+        const { scraps: scrapsRaw } = req.params
+        const scraps = JSON.parse(scrapsRaw)
 
         // Deep delete each scrap
         const deleteScraps = []
-        for (const scrap of parsedScraps) {
-            deleteScraps.push(deepDeleteScrap(req, res, scrap))
+        for (const scrap of scraps) {
+            const scrapModel = await Scrap.findById(scrap)
+            deleteScraps.push(deepDeleteScrap(scrapModel))
         }
         await Promise.all(deleteScraps)
 

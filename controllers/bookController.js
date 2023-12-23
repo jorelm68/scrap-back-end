@@ -14,7 +14,14 @@ const {
     getCoordinates,
     calculateMiles,
     handleError,
-    handleBookSort
+    handleBookSort,
+    handleBookRemoveScrap,
+    recalculateBookMiles,
+    recalculateBookDates,
+    sortAuthorBooks,
+    handleBookAddScrap,
+    like,
+    unLike
 } = require('../other/handler')
 const { body, param, validationResult } = require('express-validator')
 
@@ -63,23 +70,6 @@ const saveBook = async (req, res) => {
         } = req.body
 
         const scraps = JSON.parse(scrapsRaw)
-        const coordinates = await getCoordinates(scraps)
-        const miles = await calculateMiles(coordinates)
-
-        // Recalculate the beginDate and endDate
-        const firstScrapModel = await Scrap.findById(scraps[0])
-        if (!firstScrapModel) {
-            return handleError(res, 400, `firstScrap: "${firstScrapModel}" doesn't exist`)
-        }
-        const lastScrapModel = await Scrap.findById(scraps[scraps.length - 1])
-        if (!lastScrapModel) {
-            return handleError(res, 400, `lastScrap: "${lastScrapModel}" doesn't exist`)
-        }
-
-        const authorModel = await Author.findById(author)
-        if (!authorModel) {
-            return handleError(res, 400, `author: "${author}" doesn't exist`)
-        }
 
         // Create the document in MongoDB
         const bookModel = new Book({
@@ -91,12 +81,15 @@ const saveBook = async (req, res) => {
             representative: representative ? representative : '',
             likes: likes ? likes : [],
             threads: threads ? threads : [],
-            miles: miles ? miles : 0,
-            beginDate: firstScrapModel.createdAt ? firstScrapModel.createdAt : new Date(),
-            endDate: lastScrapModel.createdAt ? lastScrapModel.createdAt : new Date(),
+            miles: 0,
+            beginDate: new Date(),
+            endDate: new Date(),
             createdAt: createdAt ? createdAt : new Date()
         })
         await bookModel.save()
+
+        await recalculateBookMiles(bookModel)
+        await recalculateBookDates(bookModel)
 
         // if (privacy === 'public') {
         //     await handleAction(req, res, {
@@ -111,16 +104,21 @@ const saveBook = async (req, res) => {
         // Add the book reference to each scrap
         for (const scrap of scraps) {
             const scrapModel = await Scrap.findById(scrap)
-            if (!scrapModel) {
-                return handleError(res, 400, `scrap: "${scrap}" doesn't exist`)
+            if (scrapModel) {
+                scrapModel.book = bookModel._id
+                await scrapModel.save()
             }
-            scrapModel.book = bookModel._id
-            await scrapModel.save()
+
         }
 
-        // Add the book to author's books array (first sort them)
-        authorModel.books = await handleBookSort([...authorModel.books, bookModel._id])
-        await authorModel.save()
+        // Add the book to the author's library
+        const authorModel = await Author.findById(bookModel.author)
+        if (authorModel) {
+            authorModel.books.push(bookModel._id)
+            await authorModel.save()
+
+            await sortAuthorBooks(authorModel)
+        }
 
         return handleResponse(res, { book: bookModel._id })
     }
@@ -139,58 +137,7 @@ const addScrap = async (req, res) => {
 
         const { book, scrap } = req.body
 
-        const bookModel = await Book.findById(book)
-        if (!bookModel) {
-            return handleError(res, 400, `book: "${book}" doesn't exist`)
-        }
-        const scrapModel = await Scrap.findById(scrap)
-        if (!scrapModel) {
-            return handleError(res, 400, `scrap: "${scrap}" doesn't exist`)
-        }
-
-        // Add the scrap's id to the book's scraps array
-        bookModel.scraps.pull(scrap)
-        let scraps = bookModel.scraps
-        scraps.push(scrap)
-        scraps = await handleScrapSort(scraps)
-        bookModel.scraps = scraps
-
-        // Set the book as the scrap's book
-        scrapModel.book = book
-
-        // Recalculate the miles traveled
-        const coordinates = await getCoordinates(scraps)
-        const miles = await calculateMiles(coordinates)
-        bookModel.miles = miles
-
-        // Recalculate the beginDate and endDate
-        const firstScrapModel = await Scrap.findById(scraps[0])
-        if (!firstScrapModel) {
-            return handleError(res, 400, `firstScrap: "${firstScrapModel}" doesn't exist`)
-        }
-        const lastScrapModel = await Scrap.findById(scraps[scraps.length - 1])
-        if (!lastScrapModel) {
-            return handleError(res, 400, `lastScrap: "${lastScrapModel}" doesn't exist`)
-        }
-        const oldBeginDate = bookModel.beginDate
-        bookModel.beginDate = firstScrapModel.createdAt
-        bookModel.endDate = lastScrapModel.createdAt
-
-        await Promise.all([
-            bookModel.save(),
-            scrapModel.save(),
-        ])
-
-        // Make sure to reorder the books in the author's profile if the beginDate changed
-        if (oldBeginDate !== firstScrapModel.createdAt) {
-            const authorModel = await Author.findById(bookModel.author)
-            if (!authorModel) {
-                return handleError(res, 400, `author: "${bookModel.author}" doesn't exist`)
-            }
-
-            authorModel.books = await handleBookSort(authorModel.books)
-            await authorModel.save()
-        }
+        await handleBookAddScrap(req, res, book, scrap)
 
         return handleResponse(res, { book, scrap })
     }
@@ -209,67 +156,7 @@ const removeScrap = async (req, res) => {
 
         const { book, scrap } = req.body
 
-        const bookModel = await Book.findById(book)
-        if (!bookModel) {
-            return handleError(res, 400, `book: "${book}" doesn't exist`)
-        }
-        const scrapModel = await Scrap.findById(scrap)
-        if (!scrapModel) {
-            return handleError(res, 400, `scrap: "${scrap}" doesn't exist`)
-        }
-
-        if (!bookModel.scraps.includes(scrap) || !scrapModel.book === book) {
-            bookModel.scraps.pull(scrap)
-            scrapModel.book = ''
-            await Promise.all([
-                bookModel.save(),
-                scrapModel.save(),
-            ])
-            return handleError(res, 400, `The scrap: "${scrapModel.title}" doesn't belong to the book: "${bookModel.title}"`)
-        }
-
-        // Remove the scrap's id from the book's scraps array
-        bookModel.scraps.pull(scrap)
-
-        // Set the scrap's book variable to empty
-        scrapModel.book = ''
-
-        // Recalculate the miles traveled
-        const newScraps = bookModel.scraps.filter((value) => {
-            return value !== scrap
-        })
-        const coordinates = await getCoordinates(newScraps)
-        const miles = await calculateMiles(coordinates)
-        bookModel.miles = miles
-
-        // Recalculate the beginDate and endDate
-        const firstScrapModel = await Scrap.findById(newScraps[0])
-        if (!firstScrapModel) {
-            return handleError(res, 400, `firstScrap: "${firstScrapModel}" doesn't exist`)
-        }
-        const lastScrapModel = await Scrap.findById(newScraps[newScraps.length - 1])
-        if (!lastScrapModel) {
-            return handleError(res, 400, `lastScrap: "${lastScrapModel}" doesn't exist`)
-        }
-        const oldBeginDate = bookModel.beginDate
-        bookModel.beginDate = firstScrapModel.createdAt
-        bookModel.endDate = lastScrapModel.createdAt
-
-        await Promise.all([
-            bookModel.save(),
-            scrapModel.save(),
-        ])
-
-        // Make sure to reorder the books in the author's profile if the beginDate changed
-        if (oldBeginDate !== firstScrapModel.createdAt) {
-            const authorModel = await Author.findById(bookModel.author)
-            if (!authorModel) {
-                return handleError(res, 400, `author: "${bookModel.author}" doesn't exist`)
-            }
-
-            authorModel.books = await handleBookSort(authorModel.books)
-            await authorModel.save()
-        }
+        await handleBookRemoveScrap(req, res, book, scrap)
 
         return handleResponse(res, { book, scrap })
     }
@@ -289,42 +176,8 @@ const addLike = async (req, res) => {
         const { author, book } = req.body
 
         const authorModel = await Author.findById(author)
-        if (!authorModel) {
-            return handleError(res, 400, `user: "${author}" doesn't exist`)
-        }
         const bookModel = await Book.findById(book)
-        if (!bookModel) {
-            return handleError(res, 400, `book: "${book}" doesn't exist`)
-        }
-
-        // Check to see if the book is already liked by that person
-        if (bookModel.likes.includes(author) || authorModel.likedBooks.includes(book)) {
-            bookModel.likes.pull(author)
-            authorModel.likedBooks.pull(book)
-
-            bookModel.likes.push(author)
-            authorModel.likedBooks.push(book)
-
-            await Promise.all([
-                bookModel.save(),
-                authorModel.save(),
-            ])
-
-            return handleError(res, 400, `${authorModel.pseudonym} already liked the book: "${bookModel.title}"`)
-        }
-
-        // Refresh the array
-        bookModel.likes.pull(author)
-        authorModel.likedBooks.pull(book)
-
-        // Add the like
-        bookModel.likes.push(author)
-        authorModel.likedBooks.push(book)
-
-        await Promise.all([
-            bookModel.save(),
-            authorModel.save(),
-        ])
+        await like(bookModel, authorModel)
 
         return handleResponse(res, { user: author, book })
     }
@@ -344,35 +197,8 @@ const removeLike = async (req, res) => {
         const { author, book } = req.body
 
         const authorModel = await Author.findById(author)
-        if (!authorModel) {
-            return handleError(res, 400, `user: "${author}" doesn't exist`)
-        }
         const bookModel = await Book.findById(book)
-        if (!bookModel) {
-            return handleError(res, 400, `book: "${book}" doesn't exist`)
-        }
-
-        // Check to see if the book isn't already liked by that person
-        if (!bookModel.likes.includes(author) || !authorModel.likedBooks.includes(book)) {
-            bookModel.likes.pull(author)
-            authorModel.likedBooks.pull(book)
-
-            await Promise.all([
-                bookModel.save(),
-                authorModel.save(),
-            ])
-
-            return handleError(res, 400, `${authorModel.pseudonym} never liked the book: "${bookModel.title}"`)
-        }
-
-        // Remove the book like association from the arrays
-        bookModel.likes.pull(author)
-        authorModel.likedBooks.pull(book)
-
-        await Promise.all([
-            bookModel.save(),
-            authorModel.save(),
-        ])
+        await unLike(bookModel, authorModel)
 
         return handleResponse(res, { user: author, book })
     }
@@ -385,16 +211,15 @@ const deleteBooks = async (req, res) => {
             param('books').exists().withMessage('param: books is required'),
         ], validationResult)
 
-        const {
-            books: booksRaw
-        } = req.params
+        const { books: booksRaw } = req.params
 
         const books = JSON.parse(booksRaw)
 
         // Deep delete each book
         const deleteBooks = []
         for (const book of books) {
-            deleteBooks.push(deepDeleteBook(req, res, book))
+            const bookModel = await Book.findById(book)
+            deleteBooks.push(deepDeleteBook(bookModel))
         }
         await Promise.all(deleteBooks)
 

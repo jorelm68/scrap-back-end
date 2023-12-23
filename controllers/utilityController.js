@@ -19,6 +19,9 @@ const {
     getCoordinates,
     calculateMiles,
     handleBookSort,
+    getRelationship,
+    thread,
+    unThread,
 } = require('../other/handler')
 const { body, param, validationResult } = require('express-validator')
 const saltRounds = 10
@@ -36,163 +39,110 @@ const get = async (req, res) => {
 
         const { model, id, key, user } = req.params
         if (key === 'relationship') {
-            if (id === user) {
-                return handleResponse(res, { relationship: 'self' })
-            }
             const userModel = await Author.findById(user)
-            if (!userModel) {
-                return handleError(res, 400, `user: "${user}" doesn't exist`)
-            }
+            if (userModel) {
+                let relationship = 'none'
+                if (userModel.friends.includes(id)) {
+                    relationship = 'friend'
+                }
+                else if (id === user) {
+                    relationship === 'self'
+                }
+                else if (userModel.outgoingFriendRequests.includes(id)) {
+                    relationship = 'outgoingFriendRequest'
+                }
+                else if (userModel.incomingFriendRequests.includes(id)) {
+                    relationship = 'incomingFriendRequest'
+                }
 
-            let relationship = 'none'
-            if (userModel.friends.includes(id)) {
-                relationship = 'friend'
+                return handleResponse(res, { relationship })
             }
-            else if (userModel.outgoingFriendRequests.includes(id)) {
-                relationship = 'outgoingFriendRequest'
-            }
-            else if (userModel.incomingFriendRequests.includes(id)) {
-                relationship = 'incomingFriendRequest'
-            }
-
-            return handleResponse(res, { relationship })
-        }
-        else if (['headshot', 'cover'].includes(key)) {
-            const authorModel = await Author.findById(id)
-            if (!authorModel) {
-                return handleError(res, 400, `author: "${id}" doesn't exist`)
-            }
-
-            const scrap = authorModel.headshotAndCover
-            const scrapModel = scrapModel.findById(scrap)
-            if (!scrapModel) {
-                return handleError(res, 400, `scrap: "${scrap}" doesn't exist`)
-            }
-
-            return handleResponse(res, {
-                [key]: key === 'headshot' ? scrapModel.headshot : scrapModel.cover
-            })
+            return handleError(res, 400, 'Could not get relationship')
         }
         else if (key === 'publicBooks') {
             const authorModel = await Author.findById(id)
-            if (!authorModel) {
-                return handleError(res, 400, `author: "${id}" doesn't exist`)
-            }
+            if (authorModel) {
+                let publicBooks = []
 
-            const books = authorModel.books
-            let publicBooks = []
-            for (const book of books) {
-                const bookModel = await Book.findById(book)
-                if (!bookModel) {
-                    return handleError(res, 400, `book: "${book}" doesn't exist`)
+                // Add all books that are public
+                for (const book of authorModel.books) {
+                    const bookModel = await Book.findById(book)
+                    if (bookModel) {
+                        if (bookModel.isPublic) {
+                            publicBooks.push(book)
+                        }
+                    }
                 }
-                const isPublic = bookModel.isPublic
-                if (isPublic) {
-                    publicBooks.push(book)
-                }
+                return handleResponse(res, { publicBooks })
             }
-
-            return handleResponse(res, {
-                publicBooks,
-            })
+            return handleError(res, 400, 'Could not get publicBooks')
         }
         else if (key === 'profileBooks') {
-            const authorModel = await Author.findById(id)
-            if (!authorModel) {
-                return handleError(res, 400, `author: "${id}" doesn't exist`)
-            }
-
             const userModel = await Author.findById(user)
-            if (!userModel) {
-                return handleError(res, 400, `user: "${user}" doesn't exist`)
-            }
+            const authorModel = await Author.findById(id)
+            if (userModel && authorModel) {
+                const relationship = await getRelationship(userModel, authorModel)
 
-            let relationship = 'none'
-            if (user === id) {
-                relationship = 'self'
-            }
-            else if (userModel.friends.includes(id)) {
-                relationship = 'friend'
-            }
-            else if (userModel.incomingFriendRequests.includes(id)) {
-                relationship = 'incomingFriendRequest'
-            }
-            else if (userModel.outgoingFriendRequests.includes(id)) {
-                relationship = 'outgoingFriendRequest'
-            }
-
-            if (relationship === 'self') {
-                return handleResponse(res, {
-                    profileBooks: authorModel.books
-                })
-            }
-
-            const books = authorModel.books
-            let filtered = []
-            for (const book of books) {
-                const bookModel = await Book.findById(book)
-                if (!bookModel) {
-                    return handleError(res, 400, `book: "${book}" doesn't exist`)
+                if (relationship === 'self') {
+                    return handleResponse(res, { profileBooks: authorModel.books })
                 }
 
-                const isPublic = bookModel.isPublic
-                if (isPublic) {
-                    filtered.push(book)
+                // Add everything if friends, only public if not friends
+                const books = authorModel.books
+                let filtered = []
+                for (const book of books) {
+                    const bookModel = await Book.findById(book)
+                    if (bookModel) {
+                        if (bookModel.isPublic) {
+                            filtered.push(book)
+                        }
+                        else if (['friend'].includes(relationship)) {
+                            filtered.push(book)
+                        }
+                    }
                 }
-                else if (['friend'].includes(relationship)) {
-                    filtered.push(book)
-                }
+                return handleResponse(res, { profileBooks: filtered })
             }
-
-            return handleResponse(res, {
-                profileBooks: filtered
-            })
+            return handleError(res, 400, 'Could not get profileBooks')
         }
         else if (key === 'feed') {
             // Fetch the current user's friends
             const authorModel = await Author.findById(id)
-            if (!authorModel) {
-                return handleError(res, 400, `author: "${id}" doesn't exist`)
+            if (authorModel) {
+                // Find books posted by the current user and their friends
+                const results = await Book.find({
+                    $or: [
+                        { author: id }, // Books posted by the current user
+                        { author: { $in: authorModel.friends } }, // Books posted by friends
+                    ]
+                }).sort({ createdAt: -1 }) // Sort by creation date (descending)
+
+                const bookIds = results.slice(0, 10).map(book => book._id)
+                const sortedBookIds = await handleBookSort(bookIds)
+
+                return handleResponse(res, { feed: sortedBookIds })
             }
-
-            const friends = authorModel.friends
-
-            // Find books posted by the current user and their friends
-            const results = await Book.find({
-                $or: [
-                    { author: id }, // Books posted by the current user
-                    { author: { $in: friends } }, // Books posted by friends
-                ]
-            }).sort({ createdAt: -1 }) // Sort by creation date (descending)
-
-            const bookIds = results.slice(0, 10).map(book => book._id)
-            const sortedBookIds = await handleBookSort(bookIds)
-
-            return handleResponse(res, { feed: sortedBookIds })
+            return handleError(res, 400, 'Could not get feed')
         }
         else if (key === 'unbookedScraps') {
             const authorModel = await Author.findById(id)
-            if (!authorModel) {
-                return handleError(res, 400, `author: "${id}" doesn't exist`)
-            }
-
-            const scraps = authorModel.scraps
-            let unbookedScraps = []
-            for (const scrap of scraps) {
-                const scrapModel = await Scrap.findById(scrap)
-                if (!scrapModel) {
-                    return handleError(res, 400, `scrap: "${scrap}" doesn't exist`)
+            if (authorModel) {
+                let unbookedScraps = []
+                for (const scrap of authorModel.scraps) {
+                    const scrapModel = await Scrap.findById(scrap)
+                    if (scrapModel) {
+                        const book = scrapModel.book
+                        if (!book || book === '') {
+                            unbookedScraps.push(scrap)
+                        }
+                    }
                 }
-                const book = scrapModel.book
-                if (!book || book === '') {
-                    unbookedScraps.push(scrap)
-                }
+                return handleResponse(res, { unbookedScraps })
             }
-
-            return handleResponse(res, { unbookedScraps })
+            return handleError(res, 400, 'Could not get unbookedScraps')
         }
 
-        const Model = require(`../models/${model}`); // Assuming your models are in a 'models' folder
+        const Model = require(`../models/${model}`)
 
         document = await Model.findById(id);
         if (!document) {
@@ -232,7 +182,6 @@ const set = async (req, res) => {
 
         if (key === 'password') {
             value = await bcrypt.hash(value, saltRounds)
-            console.log(value)
         }
 
         // Update the document's property with the provided key and value
@@ -286,12 +235,6 @@ const getPhoto = async (req, res) => {
     await handleRequest(req, res, code)
 }
 
-const reverseGeocode = async (req, res) => {
-    const code = async (req, res) => {
-
-    }
-    await handleRequest(req, res, code)
-}
 const authorSearch = async (req, res) => {
     const code = async (req, res) => {
         await handleInputValidation(req, res, [
@@ -304,43 +247,28 @@ const authorSearch = async (req, res) => {
 
         // Get the author searching
         const authorModel = await Author.findById(author)
-        if (!authorModel) {
-            return handleError(res, 400, `author: "${author}" doesn't exist`)
+        if (authorModel) {
+            // MongoDB search query
+            const result = await Author.find({
+                $or: [
+                    { pseudonym: { $regex: search, $options: 'i' } }, // Case-insensitive search for pseudonym
+                    {
+                        $and: [
+                            { $or: [{ firstName: { $regex: search, $options: 'i' } }, { lastName: { $regex: search, $options: 'i' } }] }, // Case-insensitive search for firstName or lastName
+                        ]
+                    }
+                ]
+            })
+                .sort({ pseudonym: -1, firstName: -1, lastName: -1 }) // Sort by relevance
+
+            // Extracting IDs from the results
+            const relevantAuthors = result.slice(0, 10).map(author => author._id)
+
+            return handleResponse(res, {
+                authors: relevantAuthors,
+            })
         }
-
-        // MongoDB search query
-        const result = await Author.find({
-            $or: [
-                { pseudonym: { $regex: search, $options: 'i' } }, // Case-insensitive search for pseudonym
-                {
-                    $and: [
-                        { $or: [{ firstName: { $regex: search, $options: 'i' } }, { lastName: { $regex: search, $options: 'i' } }] }, // Case-insensitive search for firstName or lastName
-                    ]
-                }
-            ]
-        })
-            .sort({ pseudonym: -1, firstName: -1, lastName: -1 }) // Sort by relevance
-
-        // Extracting IDs from the results
-        const relevantAuthors = result.slice(0, 10).map(author => author._id)
-
-        return handleResponse(res, {
-            authors: relevantAuthors,
-        })
-
-        // I want the logic of this function to search through all Author documents and prioritize:
-        // authorModel.pseudonym
-        // then prioritze
-        // authorModel.firstName and authorModel.lastName
-
-        // Then I want it to build an array of 10 authorModel._ids sorted in the order of how relevant
-        // the search is to the author
-    }
-    await handleRequest(req, res, code)
-}
-const scrapSearch = async (req, res) => {
-    const code = async (req, res) => {
-
+        return handleError(res, 400, 'Could not get search results')
     }
     await handleRequest(req, res, code)
 }
@@ -358,71 +286,61 @@ const bookSearch = async (req, res) => {
 
         // Get the author searching
         const authorModel = await Author.findById(author)
-        if (!authorModel) {
-            return handleError(res, 400, `author: "${author}" doesn't exist`)
-        }
-
-        // MongoDB query to search within Book documents based on title, description, and place
-        const result = await Book.find({
-            $or: [
-                { title: { $regex: search, $options: 'i' } },
-                { place: { $regex: search, $options: 'i' } },
-                { description: { $regex: search, $options: 'i' } }
-            ]
-        })
-            .sort({ title: -1, place: -1, description: -1 }) // Sort by relevance
-
-        // Remove private books from the query
-        let filtered = [...result]
-
-        if (remove.includes('selfBooks')) {
-            filtered = filtered.filter((bookModel) => {
-                return bookModel.author !== author
+        if (authorModel) {
+            // MongoDB query to search within Book documents based on title, description, and place
+            const result = await Book.find({
+                $or: [
+                    { title: { $regex: search, $options: 'i' } },
+                    { place: { $regex: search, $options: 'i' } },
+                    { description: { $regex: search, $options: 'i' } }
+                ]
             })
+                .sort({ title: -1, place: -1, description: -1 }) // Sort by relevance
+
+            // Remove private books from the query
+            let filtered = [...result]
+
+            if (remove.includes('selfBooks')) {
+                filtered = filtered.filter((bookModel) => {
+                    return bookModel.author !== author
+                })
+            }
+
+            if (remove.includes('privateBooks')) {
+                filtered = filtered.filter((bookModel) => {
+                    return !bookModel.isPublic
+                })
+            }
+
+            if (remove.includes('restrictedBooks')) {
+                filtered = filtered.filter((bookModel) => {
+                    const creator = bookModel.author
+                    const isPublic = bookModel.isPublic
+                    let relationship = 'none'
+                    if (author === creator) {
+                        relationship = 'self'
+                    }
+                    else if (authorModel.friends.includes(creator)) {
+                        relationship = 'friend'
+                    }
+                    else if (authorModel.incomingFriendRequests.includes(creator)) {
+                        relationship = 'incomingFriendRequest'
+                    }
+                    else if (authorModel.outgoingFriendRequests.includes(creator)) {
+                        relationship = 'outgoingFriendRequest'
+                    }
+
+                    return !(!isPublic && !['self', 'friend'].includes(relationship))
+                })
+            }
+
+            const bookIds = filtered.slice(0, 10).map(book => book._id)
+            const sortedBookIds = await handleBookSort(bookIds)
+
+            // Return the list of relevant book IDs
+            return handleResponse(res, { books: sortedBookIds })
         }
-
-        if (remove.includes('privateBooks')) {
-            filtered = filtered.filter((bookModel) => {
-                return !bookModel.isPublic
-            })
-        }
-
-        if (remove.includes('restrictedBooks')) {
-            filtered = filtered.filter((bookModel) => {
-                const creator = bookModel.author
-                const isPublic = bookModel.isPublic
-                let relationship = 'none'
-                if (author === creator) {
-                    relationship = 'self'
-                }
-                else if (authorModel.friends.includes(creator)) {
-                    relationship = 'friend'
-                }
-                else if (authorModel.incomingFriendRequests.includes(creator)) {
-                    relationship = 'incomingFriendRequest'
-                }
-                else if (authorModel.outgoingFriendRequests.includes(creator)) {
-                    relationship = 'outgoingFriendRequest'
-                }
-
-                return !(!isPublic && !['self', 'friend'].includes(relationship))
-            })
-        }
-
-        const bookIds = filtered.slice(0, 10).map(book => book._id)
-        const sortedBookIds = await handleBookSort(bookIds)
-
-        // Return the list of relevant book IDs
-        return handleResponse(res, {
-            books: sortedBookIds
-        })
-    }
-    await handleRequest(req, res, code)
-}
-
-const generalSearch = async (req, res) => {
-    const code = async (req, res) => {
-
+        return handleError(res, 400, 'Could not get search results')
     }
     await handleRequest(req, res, code)
 }
@@ -440,41 +358,8 @@ const addThread = async (req, res) => {
         const { book, scrap } = req.body
 
         const bookModel = await Book.findById(book)
-        if (!bookModel) {
-            return handleError(res, 400, `book: "${book}" doesn't exist`)
-        }
         const scrapModel = await Scrap.findById(scrap)
-        if (!scrapModel) {
-            return handleError(res, 400, `scrap: "${scrap}" doesn't exist`)
-        }
-
-        // Check to see if the scrap already threads to the book
-        if (bookModel.threads.includes(scrap) || scrapModel.threads.includes(book)) {
-            bookModel.threads.pull(scrap)
-            scrapModel.threads.pull(book)
-            bookModel.threads.push(scrap)
-            scrapModel.threads.push(book)
-
-            await Promise.all([
-                bookModel.save(),
-                scrapModel.save(),
-            ])
-
-            return handleError(res, 400, `The scrap: "${scrapModel.title}" and the book: "${bookModel.title}" are alerady threaded`)
-        }
-
-        // Remove to refresh the thread from the scrap to the book
-        bookModel.threads.pull(scrap)
-        scrapModel.threads.pull(book)
-
-        // Add the thread between the scrap and book
-        bookModel.threads.push(scrap)
-        scrapModel.threads.push(book)
-
-        await Promise.all([
-            scrapModel.save(),
-            bookModel.save()
-        ])
+        await thread(bookModel, scrapModel)
 
         return handleResponse(res, { scrap, book })
     }
@@ -493,44 +378,10 @@ const removeThread = async (req, res) => {
         const { book, scrap } = req.body
 
         const bookModel = await Book.findById(book)
-        if (!bookModel) {
-            return handleError(res, 400, `book: "${book}" doesn't exist`)
-        }
         const scrapModel = await Scrap.findById(scrap)
-        if (!scrapModel) {
-            return handleError(res, 400, `scrap: "${scrap}" doesn't exist`)
-        }
-
-        // Check to see if the scrap doesn't thread to the book
-        if (!bookModel.threads.includes(scrap) || !scrapModel.threads.includes(book)) {
-            bookModel.threads.pull(scrap)
-            scrapModel.threads.pull(book)
-
-            await Promise.all([
-                bookModel.save(),
-                scrapModel.save(),
-            ])
-
-            return handleError(res, 400, `The scrap: "${scrapModel.title}" and the book: "${bookModel.title}" were never threaded`)
-        }
-
-        // Remove the thread from the scrap to the book
-        bookModel.threads.pull(scrap)
-        scrapModel.threads.pull(book)
-
-        await Promise.all([
-            scrapModel.save(),
-            bookModel.save()
-        ])
+        await unThread(bookModel, scrapModel)
 
         return handleResponse(res, { scrap, book })
-    }
-    await handleRequest(req, res, code)
-}
-
-const question = async (req, res) => {
-    const code = async (req, res) => {
-
     }
     await handleRequest(req, res, code)
 }
@@ -546,13 +397,10 @@ const scrapCoordinates = async (req, res) => {
 
         const coordinates = await getCoordinates(scraps)
 
-        return handleResponse(res, {
-            coordinates,
-        })
+        return handleResponse(res, { coordinates })
     }
     await handleRequest(req, res, code)
 }
-
 const bookCoordinates = async (req, res) => {
     const code = async (req, res) => {
         await handleInputValidation(req, res, [
@@ -563,45 +411,22 @@ const bookCoordinates = async (req, res) => {
 
         const books = JSON.parse(booksRaw)
 
+        // Calculate each coordinate based on each book's representative
         let coordinates = []
         for (const book of books) {
             const bookModel = await Book.findById(book)
-            if (!bookModel) {
-                return handleResponse(res, 400, `book: "${book}" doesn't exist`)
+            if (bookModel) {
+                const representative = bookModel.representative
+                const scrapModel = await Scrap.findById(representative)
+                if (scrapModel) {
+                    coordinates.push({
+                        latitude: scrapModel.latitude,
+                        longitude: scrapModel.longitude,
+                    })
+                }
             }
-
-            const representative = bookModel.representative
-            const scrapModel = await Scrap.findById(representative)
-            if (!scrapModel) {
-                return handleError(res, 400, `scrap: "${scrap}" doesn't exist`)
-            }
-
-            coordinates.push({
-                latitude: scrapModel.latitude,
-                longitude: scrapModel.longitude,
-            })
         }
-
-        return handleResponse(res, {
-            coordinates,
-        })
-    }
-    await handleRequest(req, res, code)
-}
-
-const bookSort = async (req, res) => {
-    const code = async (req, res) => {
-        await handleInputValidation(req, res, [
-            body('books').exists().withMessage('body: books is required'),
-        ], validationResult)
-
-        const { books: booksRaw } = req.body
-
-        const books = await handleBookSort(JSON.parse(booksRaw))
-
-        return handleResponse(res, {
-            books,
-        })
+        return handleResponse(res, { coordinates })
     }
     await handleRequest(req, res, code)
 }
@@ -610,15 +435,10 @@ module.exports = {
     get,
     getPhoto,
     set,
-    reverseGeocode,
     authorSearch,
-    scrapSearch,
     bookSearch,
-    generalSearch,
     addThread,
     removeThread,
-    question,
     scrapCoordinates,
     bookCoordinates,
-    bookSort,
 }
