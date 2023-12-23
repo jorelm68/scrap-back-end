@@ -18,6 +18,7 @@ const {
     sendEmail,
     getCoordinates,
     calculateMiles,
+    handleBookSort,
 } = require('../other/handler')
 const { body, param, validationResult } = require('express-validator')
 const saltRounds = 10
@@ -408,10 +409,11 @@ const bookSearch = async (req, res) => {
         }
 
         const bookIds = filtered.slice(0, 10).map(book => book._id)
+        const sortedBookIds = await handleBookSort(bookIds)
 
         // Return the list of relevant book IDs
         return handleResponse(res, {
-            books: bookIds
+            books: sortedBookIds
         })
     }
     await handleRequest(req, res, code)
@@ -586,21 +588,6 @@ const bookCoordinates = async (req, res) => {
     await handleRequest(req, res, code)
 }
 
-const calcMiles = async (req, res) => {
-    const code = async (req, res) => {
-        const { scraps: scrapsRaw } = req.body
-        const scraps = JSON.parse(scrapsRaw)
-
-        const coordinates = await getCoordinates(scraps)
-        const miles = await calculateMiles(coordinates)
-
-        return handleResponse(res, {
-            miles,
-        })
-    }
-    await handleRequest(req, res, code)
-}
-
 module.exports = {
     get,
     getPhoto,
@@ -615,5 +602,4 @@ module.exports = {
     question,
     scrapCoordinates,
     bookCoordinates,
-    calcMiles,
 }

@@ -448,17 +448,17 @@ const handleScrapSort = async (scraps) => {
     let scrapDetails = [];
 
     // Fetch details for each scrap asynchronously
-    for (const scrapId of scraps) {
+    for (const scrap of scraps) {
         try {
-            const scrapModel = await Scrap.findById(scrapId);
+            const scrapModel = await Scrap.findById(scrap);
             if (scrapModel) {
                 scrapDetails.push({
-                    id: scrapId,
+                    id: scrap,
                     createdAt: scrapModel.createdAt
                 });
             }
         } catch (error) {
-            console.error(`Error fetching details for scrap ID ${scrapId}:`, error);
+            console.error(`Error fetching details for scrap ID ${scrap}:`, error);
         }
     }
 
@@ -469,6 +469,32 @@ const handleScrapSort = async (scraps) => {
     const sortedIds = scrapDetails.map(scrap => scrap.id);
 
     return sortedIds;
+}
+const handleBookSort = async (books) => {
+    let bookDetails = []
+
+    // Fetch details for each book asynchronously
+    for (const book of books) {
+        try {
+            const bookModel = await Book.findById(book)
+            if (bookModel) {
+                bookDetails.push({
+                    id: book,
+                    createdAt: bookModel.beginDate
+                })
+            }
+        } catch (error) {
+            console.error(`Error fetching details for book ID ${book}:`, error)
+        }
+    }
+
+    // Sort the bookDetails array by beginDate timestamp
+    bookDetails.sort((a, b) => a.beginDate - b.beginDate)
+
+    // Extract only the IDs from the sorted bookDetails
+    const sortedIds = bookDetails.map(book => book.id)
+
+    return sortedIds
 }
 
 const getCoordinates = async (scraps) => {
@@ -532,6 +558,7 @@ module.exports = {
     deepDeleteScrap,
     sendEmail,
     handleScrapSort,
+    handleBookSort,
     getCoordinates,
     calculateMiles,
 }
