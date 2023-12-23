@@ -137,7 +137,9 @@ const addScrap = async (req, res) => {
 
         const { book, scrap } = req.body
 
-        await handleBookAddScrap(req, res, book, scrap)
+        const bookModel = await Book.findById(book)
+        const scrapModel = await Scrap.findById(scrap)
+        await handleBookAddScrap(bookModel, scrapModel)
 
         return handleResponse(res, { book, scrap })
     }
@@ -156,7 +158,9 @@ const removeScrap = async (req, res) => {
 
         const { book, scrap } = req.body
 
-        await handleBookRemoveScrap(req, res, book, scrap)
+        const bookModel = await Book.findById(book)
+        const scrapModel = await Scrap.findById(scrap)
+        await handleBookRemoveScrap(bookModel, scrapModel)
 
         return handleResponse(res, { book, scrap })
     }
@@ -216,12 +220,10 @@ const deleteBooks = async (req, res) => {
         const books = JSON.parse(booksRaw)
 
         // Deep delete each book
-        const deleteBooks = []
         for (const book of books) {
             const bookModel = await Book.findById(book)
-            deleteBooks.push(deepDeleteBook(bookModel))
+            await deepDeleteBook(bookModel)
         }
-        await Promise.all(deleteBooks)
 
         return handleResponse(res, { books })
     }

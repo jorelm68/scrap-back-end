@@ -130,12 +130,11 @@ const deleteScraps = async (req, res) => {
         const scraps = JSON.parse(scrapsRaw)
 
         // Deep delete each scrap
-        const deleteScraps = []
         for (const scrap of scraps) {
             const scrapModel = await Scrap.findById(scrap)
-            deleteScraps.push(deepDeleteScrap(scrapModel))
+            await deepDeleteScrap(scrapModel)
+            console.log('deleted ', scrap)
         }
-        await Promise.all(deleteScraps)
 
         return handleResponse(res, { scraps })
     }
