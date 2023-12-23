@@ -65,6 +65,16 @@ const saveBook = async (req, res) => {
         const coordinates = await getCoordinates(scraps)
         const miles = await calculateMiles(coordinates)
 
+        // Recalculate the beginDate and endDate
+        const firstScrapModel = await Scrap.findById(scraps[0])
+        if (!firstScrapModel) {
+            return handleError(res, 400, `firstScrap: "${firstScrapModel}" doesn't exist`)
+        }
+        const lastScrapModel = await Scrap.findById(scraps[scraps.length - 1])
+        if (!lastScrapModel) {
+            return handleError(res, 400, `lastScrap: "${lastScrapModel}" doesn't exist`)
+        }
+
         const authorModel = await Author.findById(author)
         if (!authorModel) {
             return handleError(res, 400, `author: "${author}" doesn't exist`)
@@ -81,6 +91,8 @@ const saveBook = async (req, res) => {
             likes: likes ? likes : [],
             threads: threads ? threads : [],
             miles: miles ? miles : 0,
+            beginDate: firstScrapModel.createdAt ? firstScrapModel.createdAt : new Date(),
+            endDate: lastScrapModel.createdAt ? lastScrapModel.createdAt : new Date(),
             createdAt: createdAt ? createdAt : new Date()
         })
         await bookModel.save()
@@ -150,6 +162,18 @@ const addScrap = async (req, res) => {
         const miles = await calculateMiles(coordinates)
         bookModel.miles = miles
 
+        // Recalculate the beginDate and endDate
+        const firstScrapModel = await Scrap.findById(scraps[0])
+        if (!firstScrapModel) {
+            return handleError(res, 400, `firstScrap: "${firstScrapModel}" doesn't exist`)
+        }
+        const lastScrapModel = await Scrap.findById(scraps[scraps.length - 1])
+        if (!lastScrapModel) {
+            return handleError(res, 400, `lastScrap: "${lastScrapModel}" doesn't exist`)
+        }
+        bookModel.beginDate = firstScrapModel.createdAt
+        bookModel.endDate = lastScrapModel.createdAt
+
         await Promise.all([
             bookModel.save(),
             scrapModel.save(),
@@ -198,11 +222,24 @@ const removeScrap = async (req, res) => {
         scrapModel.book = ''
 
         // Recalculate the miles traveled
-        const coordinates = await getCoordinates(bookModel.scraps.filter((value) => {
+        const newScraps = bookModel.scraps.filter((value) => {
             return value !== scrap
-        }))
+        })
+        const coordinates = await getCoordinates(newScraps)
         const miles = await calculateMiles(coordinates)
         bookModel.miles = miles
+
+        // Recalculate the beginDate and endDate
+        const firstScrapModel = await Scrap.findById(newScraps[0])
+        if (!firstScrapModel) {
+            return handleError(res, 400, `firstScrap: "${firstScrapModel}" doesn't exist`)
+        }
+        const lastScrapModel = await Scrap.findById(newScraps[newScraps.length - 1])
+        if (!lastScrapModel) {
+            return handleError(res, 400, `lastScrap: "${lastScrapModel}" doesn't exist`)
+        }
+        bookModel.beginDate = firstScrapModel.createdAt
+        bookModel.endDate = lastScrapModel.createdAt
 
         await Promise.all([
             bookModel.save(),
