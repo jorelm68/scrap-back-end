@@ -247,12 +247,19 @@ const recalculateAuthorMiles = async (authorModel) => {
 }
 const recalculateBookDates = async (bookModel) => {
     if (bookModel) {
-        const firstScrapModel = await Scrap.findById(bookModel.scraps[0])
-        const lastScrapModel = await Scrap.findById(bookModel.scraps[bookModel.scraps.length - 1])
-        if (firstScrapModel && lastScrapModel) {
-            bookModel.beginDate = firstScrapModel.createdAt
-            bookModel.endDate = lastScrapModel.createdAt
+        if (!bookModel.scraps || bookModel.scraps.length === 0) {
+            bookModel.beginDate = ''
+            bookModel.endDate = ''
             await bookModel.save()
+        }
+        else {
+            const firstScrapModel = await Scrap.findById(bookModel.scraps[0])
+            const lastScrapModel = await Scrap.findById(bookModel.scraps[bookModel.scraps.length - 1])
+            if (firstScrapModel && lastScrapModel) {
+                bookModel.beginDate = firstScrapModel.createdAt
+                bookModel.endDate = lastScrapModel.createdAt
+                await bookModel.save()
+            }
         }
     }
 }
@@ -327,24 +334,12 @@ const handleBookRemoveScrap = async (bookModel, scrapModel) => {
             scrapModel.save(),
         ])
 
-        console.log(2.1)
-
         await unThread(bookModel, scrapModel)
-
-        console.log(2.2)
-
         await recalculateBookMiles(bookModel)
-
-        console.log(2.3)
-
         await recalculateBookDates(bookModel)
-
-        console.log(2.4)
 
         const authorModel = await Author.findById(bookModel.author)
         await sortAuthorBooks(authorModel)
-
-        console.log(2.5)
     }
 }
 const handleBookAddScrap = async (bookModel, scrapModel) => {
