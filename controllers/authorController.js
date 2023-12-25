@@ -621,6 +621,8 @@ const removeAction = async (req, res) => {
         authorModel.actions.pull(action)
         await authorModel.save()
 
+        await Action.findOneAndDelete({ _id: action })
+
         return handleResponse(res, { author, action })
     }
     await handleRequest(req, res, code)

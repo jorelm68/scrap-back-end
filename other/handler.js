@@ -235,7 +235,7 @@ const recalculateBookDates = async (bookModel) => {
             await bookModel.save()
         }
         else {
-            const firstScrapModel = await Scrap.findById(bookModel.scraps.length - 1)
+            const firstScrapModel = await Scrap.findById(bookModel.scraps[bookModel.scraps.length - 1])
             const lastScrapModel = await Scrap.findById(bookModel.scraps[0])
             if (firstScrapModel && lastScrapModel) {
                 bookModel.beginDate = firstScrapModel.createdAt
@@ -316,12 +316,24 @@ const handleBookRemoveScrap = async (bookModel, scrapModel) => {
             scrapModel.save(),
         ])
 
+        console.log('b1')
+
         await unThread(bookModel, scrapModel)
+
+        console.log('b2')
+
         await recalculateBookMiles(bookModel)
+
+        console.log('b3')
+
         await recalculateBookDates(bookModel)
+
+        console.log('b4')
 
         const authorModel = await Author.findById(bookModel.author)
         await sortAuthorBooks(authorModel)
+
+        console.log('b5')
     }
 }
 const handleBookAddScrap = async (bookModel, scrapModel) => {
@@ -433,26 +445,26 @@ const deepDeleteBook = async (bookModel) => {
 
         console.log('a')
 
+        // Remove each scrap from the book
+        for (const scrap of bookModel.scraps) {
+            const scrapModel = await Scrap.findById(scrap)
+            await handleBookRemoveScrap(bookModel, scrapModel)
+        }
+
+        console.log('b')
+
         // Remove all threads between this book and any scraps
         for (const scrap of bookModel.threads) {
             const scrapModel = await Scrap.findById(scrap)
             await unThread(bookModel, scrapModel)
         }
 
-        console.log('b')
+        console.log('c')
 
         // Remove any likes between this book and any authors
         for (const author of bookModel.likes) {
             const authorModel = await Author.findById(author)
             await unLike(bookModel, authorModel)
-        }
-
-        console.log('c')
-
-        // Remove each scrap from the book
-        for (const scrap of bookModel.scraps) {
-            const scrapModel = await Scrap.findById(scrap)
-            await handleBookRemoveScrap(bookModel, scrapModel)
         }
 
         console.log('d')
@@ -467,7 +479,7 @@ const deepDeleteBook = async (bookModel) => {
         // Delete the book from MongoDB
         await Book.findOneAndDelete({ _id: bookModel._id })
 
-        console.log('f')
+        console.log('e')
     }
 }
 const deepDeleteScrap = async (scrapModel) => {
