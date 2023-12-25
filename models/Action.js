@@ -3,8 +3,6 @@ const Schema = mongoose.Schema
 
 const actionSchema = new Schema({
     type: String,
-    name: String,
-    description: String,
     read: Boolean,
 
     sender: {

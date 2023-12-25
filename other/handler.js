@@ -52,7 +52,7 @@ const handleInputValidation = async (req, res, checks, validationResult) => {
 
 const handleAction = async (action) => {
     const { type, sender, target } = action
-    
+
     if (type === 'sendRequest') {
         const senderModel = await Author.findById(sender.author)
 
@@ -66,15 +66,15 @@ const handleAction = async (action) => {
         await pushNotification([target.author], `${getName(senderModel)} accepted your friend request!`)
     }
     else if (type === 'likeBook') {
-        const senderModel = Author.findById(sender.author)
-        const bookModel = Book.findById(target.book)
+        const senderModel = await Author.findById(sender.author)
+        const bookModel = await Book.findById(target.book)
 
         await pushAction([target.author], action)
         await pushNotification([target.author], `${getName(senderModel)} liked your book${formatBody(bookModel.title)}`)
     }
     else if (type === 'postBook') {
-        const senderModel = Author.findById(sender.author)
-        const bookModel = Book.findById(target.book)
+        const senderModel = await Author.findById(sender.author)
+        const bookModel = await Book.findById(target.book)
 
         const acquaintances = getAcquaintances(senderModel)
 
@@ -110,25 +110,23 @@ const pushNotification = async (authors, message) => {
     }
 }
 const getName = (authorModel) => {
-    const { firstName, lastName, pseudonym } = authorModel
-
-    let name = `${firstName}${firstName && lastName ? ' ' : ''}${lastName}`
-    if (!name) {
-        name = pseudonym
+    let name = 'Someone'
+    if (authorModel) {
+        name = `${authorModel.firstName}${authorModel.firstName && authorModel.lastName ? ' ' : ''}${authorModel.lastName}`
+        if (!name) {
+            name = authorModel.pseudonym
+        }
     }
-
     return name
 }
 async function sendPushNotification(expoPushToken, body) {
     const message = {
         to: expoPushToken,
         sound: 'default',
-        title: 'Scrap-BETA',
-        body,
-        data: {
-            icon: 'https://scrap-back-dcece16d1741.herokuapp.com/notification-icon',
-        },
-    }
+        title: 'Scrap',
+        body: body,
+        data: { someData: 'goes here' },
+    };
 
     await fetch('https://exp.host/--/api/v2/push/send', {
         method: 'POST',
@@ -138,7 +136,7 @@ async function sendPushNotification(expoPushToken, body) {
             'Content-Type': 'application/json',
         },
         body: JSON.stringify(message),
-    })
+    });
 }
 const formatDateToString = (date) => {
     const year = date.getFullYear()
