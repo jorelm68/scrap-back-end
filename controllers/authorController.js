@@ -326,7 +326,6 @@ const sendRequest = async (req, res) => {
         ])
 
         await handleAction({
-            _id: new mongoose.Types.ObjectId(),
             type: 'sendRequest',
             sender: {
                 author: user,
@@ -479,7 +478,6 @@ const acceptRequest = async (req, res) => {
         ])
 
         await handleAction({
-            _id: new mongoose.Types.ObjectId(), // Generate a new unique ObjectId
             type: 'acceptRequest',
             sender: {
                 author: user,
@@ -607,17 +605,17 @@ const removeFriend = async (req, res) => {
 const removeAction = async (req, res) => {
     const code = async (req, res) => {
         await handleInputValidation(req, res, [
-            body('user').exists().withMessage('body: user is required'),
-            body('user').isMongoId().withMessage('body: user must be MongoId'),
+            body('author').exists().withMessage('body: author is required'),
+            body('author').isMongoId().withMessage('body: author must be MongoId'),
             body('action').exists().withMessage('body: action is required'),
             body('action').isMongoId().withMessage('body: action must be MongoId'),
         ], validationResult)
 
-        const { user, action } = req.body
+        const { author, action } = req.body
 
-        const userModel = await Author.findById(user)
-        if (!userModel) {
-            return handleError(res, 400, `user: "${user}" doesn't exist`)
+        const authorModel = await Author.findById(author)
+        if (!authorModel) {
+            return handleError(res, 400, `author: "${author}" doesn't exist`)
         }
 
         authorModel.actions.pull(action)

@@ -91,14 +91,16 @@ const getAcquaintances = (authorModel) => {
     return acquaintances
 }
 const pushAction = async (authors, action) => {
-    const newAction = {
+    const actionModel = await Action.create({
         ...action,
         read: false,
         createdAt: new Date(),
-    }
+    })
+    await actionModel.save()
+
     for (const author of authors) {
         const authorModel = await Author.findById(author)
-        authorModel.actions.push(newAction._id)
+        authorModel.actions.push(actionModel._id)
         await authorModel.save()
     }
 }

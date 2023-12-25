@@ -109,7 +109,6 @@ const saveBook = async (req, res) => {
 
         if (isPublic) {
             await handleAction({
-                _id: new mongoose.Types.ObjectId(),
                 type: 'postBook',
                 sender: {
                     author,
@@ -185,7 +184,6 @@ const addLike = async (req, res) => {
         await like(bookModel, authorModel)
 
         await handleAction({
-            _id: new mongoose.Types.ObjectId(), // Generate a new unique ObjectId
             type: 'likeBook',
             sender: {
                 author,

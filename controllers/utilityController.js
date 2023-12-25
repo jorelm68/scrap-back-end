@@ -188,7 +188,6 @@ const set = async (req, res) => {
         if (key === 'isPublic') {
             const bookModel = await Book.findById(id)
             await handleAction({
-                _id: new mongoose.Types.ObjectId(),
                 type: 'postBook',
                 sender: {
                     author: bookModel.author,
