@@ -115,7 +115,7 @@ const get = async (req, res) => {
                         { author: id }, // Books posted by the current user
                         { author: { $in: authorModel.friends } }, // Books posted by friends
                     ]
-                }).sort({ createdAt: -1 }) // Sort by creation date (descending)
+                }).sort({ beginDate: -1 }) // Sort by creation date (descending)
 
                 const bookIds = results.slice(0, 10).map(book => book._id)
                 const sortedBookIds = await handleBookSort(bookIds)
