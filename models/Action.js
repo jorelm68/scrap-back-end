@@ -2,15 +2,22 @@ const mongoose = require('mongoose')
 const Schema = mongoose.Schema
 
 const actionSchema = new Schema({
-    actionType: String,
+    type: String,
+    name: String,
+    description: String,
+    read: Boolean,
 
-    senderAuthor: String,
-    senderBook: String,
-    senderScrap: String,
+    sender: {
+        author: String,
+        book: String,
+        scrap: String,
+    },
 
-    targetAuthor: String,
-    targetBook: String,
-    targetScrap: String,
+    target: {
+        author: String,
+        book: String,
+        scrap: String,
+    },
 
     createdAt: Date,
 })

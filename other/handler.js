@@ -50,66 +50,45 @@ const handleInputValidation = async (req, res, checks, validationResult) => {
     }
 }
 
-const handleAction = async (req, res, action) => {
-    const {
-        actionType,
-        senderAuthor,
-        senderBook,
-        senderScrap,
-        targetAuthor,
-        targetBook,
-        targetScrap,
-    } = action
+const handleAction = async (action) => {
+    const { type, sender, target, name, description } = action
+    
+    if (type === 'sendRequest') {
+        const senderModel = await Author.findById(sender.author)
 
-    if (actionType === 'sendRequest') {
-        // author -> author
-        const senderAuthorModel = await Author.findById(senderAuthor)
-
-        await pushAction(req, res, [targetAuthor], action)
-        await pushNotification(req, res, [targetAuthor], `${getName(senderAuthorModel)} sent you a friend request`)
+        await pushAction([target.author], action)
+        await pushNotification([target.author], `${getName(senderModel)} sent you a friend request!`)
     }
-    else if (actionType === 'acceptRequest') {
-        // author -> author
-        const senderAuthorModel = await Author.findById(senderAuthor)
+    else if (type === 'acceptRequest') {
+        const senderModel = await Author.findById(sender.author)
 
-        await pushAction(req, res, [targetAuthor], action)
-        await pushNotification(req, res, [targetAuthor], `${getName(senderAuthorModel)} accepted your friend request`)
+        await pushAction([target.author], action)
+        await pushNotification([target.author], `${getName(senderModel)} accepted your friend request!`)
     }
-    else if (actionType === 'likeBook') {
-        // author -> book
-        const senderAuthorModel = await Author.findById(senderAuthor)
-        const targetBookModel = await Book.findById(targetBook)
+    else if (type === 'likeBook') {
+        const senderModel = Author.findById(sender.author)
+        const bookModel = Book.findById(target.book)
 
-        await pushAction(req, res, [targetAuthor], action)
-        await pushNotification(req, res, [targetAuthor], `${getName(senderAuthorModel)} liked your Book: ${formatBody(targetBookModel.title)}`)
+        await pushAction([target.author], action)
+        await pushNotification([target.author], `${getName(senderModel)} liked your book${formatBody(bookModel.title)}`)
     }
-    else if (actionType === 'postBook') {
-        // author -> book
-        const senderAuthorModel = await Author.findById(senderAuthor)
-        const targetBookModel = await Book.findById(targetBook)
+    else if (type === 'postBook') {
+        const senderModel = Author.findById(sender.author)
+        const bookModel = Book.findById(target.book)
 
-        const acquaintances = getAcquaintances(senderAuthorModel)
-        await pushAction(req, res, acquaintances, action)
-        await pushNotification(req, res, acquaintances, `${getName(senderAuthorModel)} posted a new Book: ${formatBody(targetBookModel.title)}`)
-    }
-    else if (actionType === 'updateAutobiography') {
-        // author -> author
-        const senderAuthorModel = await Author.findById(senderAuthor)
-
-        const friends = senderAuthorModel.friends
-        await pushAction(req, res, friends, action)
-        await pushNotification(req, res, friends, `${getName(senderAuthorModel)} uupdated their Autobiography: ${formatBody(senderAuthorModel.autobiography)}`)
+        await pushAction([target.author], action)
+        await pushNotification([target.author], `${getName(senderModel)} posted a book${formatBody(bookModel.title)}`)
     }
 }
 const formatBody = (body) => {
-    return `${body.slice(0, 30)}${body.length > 30 ? '. . .' : ''}`
+    return (!body || body.lenght === 0) ? '' : `: ${body.slice(0, 30)}${body.length > 30 ? '. . .' : ''}`
 }
 const getAcquaintances = (authorModel) => {
     const { friends, incomingFriendRequests, outgoingFriendRequests } = authorModel
     const acquaintances = [...friends, ...incomingFriendRequests, ...outgoingFriendRequests]
     return acquaintances
 }
-const pushAction = async (req, res, authors, action) => {
+const pushAction = async (authors, action) => {
     const newAction = {
         ...action,
         createdAt: new Date(),
@@ -120,7 +99,7 @@ const pushAction = async (req, res, authors, action) => {
         await authorModel.save()
     }
 }
-const pushNotification = async (req, res, authors, message) => {
+const pushNotification = async (authors, message) => {
     for (const author of authors) {
         const authorModel = await Author.findById(author)
         const pushToken = authorModel.pushToken

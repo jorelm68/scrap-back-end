@@ -144,7 +144,7 @@ const get = async (req, res) => {
 
         const Model = require(`../models/${model}`)
 
-        document = await Model.findById(id);
+        document = await Model.findById(id)
         if (!document) {
             return handleError(`id: "${id}" doesn't exist`)
         }
