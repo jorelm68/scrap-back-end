@@ -325,11 +325,15 @@ const sendRequest = async (req, res) => {
             authorModel.save(),
         ])
 
-        await handleAction(req, res, {
+        await handleAction({
             _id: new mongoose.Types.ObjectId(),
-            actionType: 'sendRequest',
-            senderAuthor: user,
-            targetAuthor: author,
+            type: 'sendRequest',
+            sender: {
+                author: user,
+            },
+            target: {
+                author,
+            },
         })
 
         return handleResponse(res, { user, author })
@@ -474,11 +478,15 @@ const acceptRequest = async (req, res) => {
             userModel.save(),
         ])
 
-        await handleAction(req, res, {
+        await handleAction({
             _id: new mongoose.Types.ObjectId(), // Generate a new unique ObjectId
-            actionType: 'acceptRequest',
-            senderAuthor: user,
-            targetAuthor: author,
+            type: 'acceptRequest',
+            sender: {
+                author: user,
+            },
+            target: {
+                author,
+            },
         })
 
         return handleResponse(res, { user, author })

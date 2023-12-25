@@ -22,6 +22,7 @@ const {
     getRelationship,
     thread,
     unThread,
+    handleAction,
 } = require('../other/handler')
 const { body, param, validationResult } = require('express-validator')
 const saltRounds = 10
@@ -182,6 +183,21 @@ const set = async (req, res) => {
 
         if (key === 'password') {
             value = await bcrypt.hash(value, saltRounds)
+        }
+
+        if (key === 'isPublic') {
+            const bookModel = await Book.findById(id)
+            await handleAction({
+                _id: new mongoose.Types.ObjectId(),
+                type: 'postBook',
+                sender: {
+                    author: bookModel.author,
+                },
+                target: {
+                    author: bookModel.author,
+                    book: bookModel._id,
+                },
+            })
         }
 
         // Update the document's property with the provided key and value

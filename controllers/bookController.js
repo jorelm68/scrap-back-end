@@ -21,7 +21,8 @@ const {
     sortAuthorBooks,
     handleBookAddScrap,
     like,
-    unLike
+    unLike,
+    handleAction
 } = require('../other/handler')
 const { body, param, validationResult } = require('express-validator')
 
@@ -74,7 +75,7 @@ const saveBook = async (req, res) => {
         // Create the document in MongoDB
         const bookModel = new Book({
             author: author ? author : '',
-            scraps: scraps ? scraps : [],
+            scraps: [],
             title: title ? title : '',
             description: description ? description : '',
             isPublic: isPublic ? isPublic : false,
@@ -91,24 +92,10 @@ const saveBook = async (req, res) => {
         await recalculateBookMiles(bookModel)
         await recalculateBookDates(bookModel)
 
-        // if (privacy === 'public') {
-        //     await handleAction(req, res, {
-        //         _id: new mongoose.Types.ObjectId(),
-        //         actionType: 'postBook',
-        //         senderAuthor: author,
-        //         targetAuthor: author,
-        //         targetBook: book._id,
-        //     })
-        // }
-
-        // Add the book reference to each scrap
+        // Add each scrap to the book
         for (const scrap of scraps) {
             const scrapModel = await Scrap.findById(scrap)
-            if (scrapModel) {
-                scrapModel.book = bookModel._id
-                await scrapModel.save()
-            }
-
+            await handleBookAddScrap(bookModel, scrapModel)
         }
 
         // Add the book to the author's library
@@ -118,6 +105,20 @@ const saveBook = async (req, res) => {
             await authorModel.save()
 
             await sortAuthorBooks(authorModel)
+        }
+
+        if (isPublic) {
+            await handleAction({
+                _id: new mongoose.Types.ObjectId(),
+                type: 'postBook',
+                sender: {
+                    author,
+                },
+                target: {
+                    author,
+                    book: bookModel._id,
+                },
+            })
         }
 
         return handleResponse(res, { book: bookModel._id })
@@ -182,6 +183,18 @@ const addLike = async (req, res) => {
         const authorModel = await Author.findById(author)
         const bookModel = await Book.findById(book)
         await like(bookModel, authorModel)
+
+        await handleAction({
+            _id: new mongoose.Types.ObjectId(), // Generate a new unique ObjectId
+            type: 'likeBook',
+            sender: {
+                author,
+            },
+            target: {
+                author: bookModel.author,
+                book,
+            },
+        })
 
         return handleResponse(res, { user: author, book })
     }

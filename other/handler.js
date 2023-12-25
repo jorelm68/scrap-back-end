@@ -51,7 +51,7 @@ const handleInputValidation = async (req, res, checks, validationResult) => {
 }
 
 const handleAction = async (action) => {
-    const { type, sender, target, name, description } = action
+    const { type, sender, target } = action
     
     if (type === 'sendRequest') {
         const senderModel = await Author.findById(sender.author)
@@ -76,7 +76,9 @@ const handleAction = async (action) => {
         const senderModel = Author.findById(sender.author)
         const bookModel = Book.findById(target.book)
 
-        await pushAction([target.author], action)
+        const acquaintances = getAcquaintances(senderModel)
+
+        await pushAction(acquaintances, action)
         await pushNotification([target.author], `${getName(senderModel)} posted a book${formatBody(bookModel.title)}`)
     }
 }
@@ -91,6 +93,7 @@ const getAcquaintances = (authorModel) => {
 const pushAction = async (authors, action) => {
     const newAction = {
         ...action,
+        read: false,
         createdAt: new Date(),
     }
     for (const author of authors) {
