@@ -253,8 +253,8 @@ const recalculateBookDates = async (bookModel) => {
             await bookModel.save()
         }
         else {
-            const firstScrapModel = await Scrap.findById(bookModel.scraps[0])
-            const lastScrapModel = await Scrap.findById(bookModel.scraps[bookModel.scraps.length - 1])
+            const firstScrapModel = await Scrap.findById(bookModel.scraps.length - 1)
+            const lastScrapModel = await Scrap.findById(bookModel.scraps[0])
             if (firstScrapModel && lastScrapModel) {
                 bookModel.beginDate = firstScrapModel.createdAt
                 bookModel.endDate = lastScrapModel.createdAt
