@@ -68,7 +68,7 @@ const saveScrap = async (req, res) => {
             threads,
             book,
 
-            createdAt,
+            createdAt: createdAtRaw,
         } = req.body
 
         // Generate a unique MongoId for each image
@@ -99,7 +99,7 @@ const saveScrap = async (req, res) => {
 
             threads: threads ? threads : [],
             book: book ? book : '',
-            createdAt: createdAt ? createdAt : new Date()
+            createdAt: createdAtRaw ? JSON.parse(createdAtRaw) : new Date()
         })
         await scrap.save()
 
