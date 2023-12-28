@@ -510,7 +510,7 @@ const deepDeleteScrap = async (scrapModel) => {
             await authorModel.save()
 
             // Recalculate the author's miles traveled
-            await recalculateAuthorMiles(authorModel)
+            // await recalculateAuthorMiles(authorModel)
             console.log(1)
         }
 

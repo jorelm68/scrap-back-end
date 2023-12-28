@@ -110,10 +110,11 @@ const saveScrap = async (req, res) => {
             await authorModel.save()
 
             // Sort the author's scraps
-            await sortAuthorScraps(authorModel)
+            sortAuthorScraps(authorModel).then(() => {
+                // Recalculate the total miles the author has traveled
+                recalculateAuthorMiles(authorModel)
+            })
 
-            // Recalculate the total miles the author has traveled
-            await recalculateAuthorMiles(authorModel)
         }
 
         return handleResponse(res, { scrap: scrap._id })
@@ -134,6 +135,15 @@ const deleteScraps = async (req, res) => {
             const scrapModel = await Scrap.findById(scrap)
             await deepDeleteScrap(scrapModel)
             console.log('deleted ', scrap)
+        }
+
+        const scrapModel = await Scrap.findById(scraps[0])
+        if (scrapModel) {
+            const authorModel = await Author.findById(scrapModel.author)
+            if (authorModel) {
+                // Recalculate the total miles the author has traveled
+                recalculateAuthorMiles(authorModel)
+            }
         }
 
         return handleResponse(res, { scraps })
