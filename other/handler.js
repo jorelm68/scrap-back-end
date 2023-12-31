@@ -608,7 +608,7 @@ const handleScrapSort = async (scraps) => {
     }
 
     // Sort the scrapDetails array by createdAt timestamp
-    scrapDetails.sort((a, b) => a.createdAt - b.createdAt);
+    scrapDetails.sort((a, b) => b.createdAt - a.createdAt);
 
     // Extract only the IDs from the sorted scrapDetails
     const sortedIds = scrapDetails.map(scrap => scrap.id);
@@ -634,7 +634,7 @@ const handleBookSort = async (books) => {
     }
 
     // Sort the bookDetails array by beginDate timestamp
-    bookDetails.sort((a, b) => a.beginDate - b.beginDate)
+    bookDetails.sort((a, b) => b.beginDate - a.beginDate)
 
     // Extract only the IDs from the sorted bookDetails
     const sortedIds = bookDetails.map(book => book.id)
