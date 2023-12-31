@@ -259,7 +259,8 @@ const sortAuthorScraps = async (authorModel) => {
 }
 const sortBookScraps = async (bookModel) => {
     if (bookModel) {
-        bookModel.scraps = await handleScrapSort(bookModel.scraps)
+        const sorted = await handleScrapSort(bookModel.scraps)
+        bookModel.scraps = sorted.reverse()
         await bookModel.save()
     }
 }
@@ -337,24 +338,30 @@ const handleBookRemoveScrap = async (bookModel, scrapModel) => {
     }
 }
 const handleBookAddScrap = async (bookModel, scrapModel) => {
-    // Add the scrap's id to the book's scraps array
-    bookModel.scraps.push(scrapModel._id)
-    await bookModel.save()
+    if (bookModel && scrapModel) {
+        if (scrapModel.book !== '') {
+            return handleError(res, 400, `scrap: "${scrapModel._id}" already belongs to another book`)
+        }
 
-    // Set the book as the scrap's book
-    scrapModel.book = bookModel._id
-    await scrapModel.save()
+        // Add the scrap's id to the book's scraps array
+        bookModel.scraps.push(scrapModel._id)
+        await bookModel.save()
 
-    // Sort the book's scraps to adjust for the new scrap
-    await sortBookScraps(bookModel)
+        // Set the book as the scrap's book
+        scrapModel.book = bookModel._id
+        await scrapModel.save()
 
-    // Recalculate the miles traveled
-    await recalculateBookMiles(bookModel)
-    await recalculateBookDates(bookModel)
+        // Sort the book's scraps to adjust for the new scrap
+        await sortBookScraps(bookModel)
 
-    // Sort the author's books again to adjust for changes
-    const authorModel = await Author.findById(bookModel.author)
-    await sortAuthorBooks(authorModel)
+        // Recalculate the miles traveled
+        await recalculateBookMiles(bookModel)
+        await recalculateBookDates(bookModel)
+
+        // Sort the author's books again to adjust for changes
+        const authorModel = await Author.findById(bookModel.author)
+        await sortAuthorBooks(authorModel)
+    }
 }
 const getRelationship = async (authorModel1, authorModel2) => {
     if (authorModel1 && authorModel2) {
