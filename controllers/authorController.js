@@ -60,6 +60,8 @@ const signUp = async (req, res) => {
             pseudonym,
             email,
             password,
+            activated,
+            autobiography,
             firstName,
             lastName,
             pushToken,
@@ -88,6 +90,7 @@ const signUp = async (req, res) => {
             email: email ? email : '',
             password: hashedPassword ? hashedPassword : '',
             activated: activated ? activated : false,
+            autobiography: autobiography ? autobiography : '',
 
             firstName: firstName ? firstName : '',
             lastName: lastName ? lastName : '',
@@ -111,6 +114,7 @@ const signUp = async (req, res) => {
         // Send an email to the person's email address to activate their account
         const templatePath = 'views/emailActivateAccount.ejs'; // Replace with your EJS file path
         const templateContent = fs.readFileSync(templatePath, 'utf8');
+
 
         const htmlContent = ejs.render(templateContent, { firstName: authorModel.firstName, confirmationToken: confirmationTokenModel._id })
         await sendEmail(req, res, email, 'Activate Account', htmlContent)
