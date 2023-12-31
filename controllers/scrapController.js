@@ -131,10 +131,12 @@ const deleteScraps = async (req, res) => {
         const scraps = JSON.parse(scrapsRaw)
 
         // Deep delete each scrap
+        let promises = []
         for (const scrap of scraps) {
             const scrapModel = await Scrap.findById(scrap)
-            await deepDeleteScrap(scrapModel)
-            console.log('deleted ', scrap)
+            if (scrapModel) {
+                promises.push(deepDeleteScrap(scrapModel))
+            }
         }
 
         const scrapModel = await Scrap.findById(scraps[0])
@@ -142,7 +144,9 @@ const deleteScraps = async (req, res) => {
             const authorModel = await Author.findById(scrapModel.author)
             if (authorModel) {
                 // Recalculate the total miles the author has traveled
-                recalculateAuthorMiles(authorModel)
+                Promise.all(promises).then(() => {
+                    recalculateAuthorMiles(authorModel)
+                })
             }
         }
 
