@@ -118,7 +118,7 @@ const get = async (req, res) => {
                     ]
                 }).sort({ beginDate: -1 }) // Sort by creation date (descending)
 
-                const bookIds = results.slice(0, 10).map(book => book._id)
+                const bookIds = results.map(book => book._id)
                 const sortedBookIds = await handleBookSort(bookIds)
 
                 return handleResponse(res, { feed: sortedBookIds })
