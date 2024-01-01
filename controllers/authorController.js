@@ -61,6 +61,7 @@ const signUp = async (req, res) => {
             email,
             password,
             activated,
+            advertisements,
             autobiography,
             firstName,
             lastName,
@@ -90,6 +91,7 @@ const signUp = async (req, res) => {
             email: email ? email : '',
             password: hashedPassword ? hashedPassword : '',
             activated: activated ? activated : false,
+            advertisements: advertisements ? advertisements : true,
             autobiography: autobiography ? autobiography : '',
 
             firstName: firstName ? firstName : '',

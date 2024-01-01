@@ -18,6 +18,7 @@ const authorSchema = new Schema({
         required: true,
     },
     activated: Boolean,
+    advertisements: Boolean,
 
     headshotAndCover: String,
 
