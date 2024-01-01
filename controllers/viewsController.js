@@ -109,6 +109,12 @@ const homePage = async (req, res) => {
     await handleRequest(req, res, code)
 }
 
+const notificationIcon = async (req, res) => {
+    const buffer = fs.readFileSync('assets/icon.png')
+    res.setHeader('Content-Type', 'image/png')
+    res.send(buffer)
+}
+
 module.exports = {
     resetPassword,
     resetPasswordConfirmation,
@@ -116,4 +122,5 @@ module.exports = {
     activateAccount,
     changeEmail,
     homePage,
+    notificationIcon,
 }

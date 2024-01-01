@@ -7,6 +7,7 @@ const {
     resetPasswordConfirmation,
     activateAccount,
     changeEmail,
+    notificationIcon
 } = require('../controllers/viewsController')
 
 const router = express.Router()
@@ -17,5 +18,6 @@ router.get('/resetPassword/:passwordToken', resetPassword)
 router.post('/resetPasswordConfirmation', resetPasswordConfirmation)
 router.get('/activateAccount/:confirmationToken', activateAccount)
 router.get('/changeEmail/:confirmationToken', changeEmail)
+router.get('/notificationIcon', notificationIcon)
 
 module.exports = router

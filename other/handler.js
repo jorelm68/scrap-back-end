@@ -121,13 +121,15 @@ const getName = (authorModel) => {
     }
     return name
 }
-async function sendPushNotification(expoPushToken, body) {
+const sendPushNotification = async (expoPushToken, body) => {
     const message = {
         to: expoPushToken,
         sound: 'default',
         title: 'Scrap',
         body: body,
-        data: { someData: 'goes here' },
+        data: {
+            icon: 'https://scrap-back-end-6a4f36f8f7ee.herokuapp.com/notificationIcon',
+        },
     };
 
     await fetch('https://exp.host/--/api/v2/push/send', {
