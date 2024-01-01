@@ -185,7 +185,7 @@ const set = async (req, res) => {
             value = await bcrypt.hash(value, saltRounds)
         }
 
-        if (key === 'isPublic') {
+        if (key === 'isPublic' && value) {
             const bookModel = await Book.findById(id)
             await handleAction({
                 type: 'postBook',
