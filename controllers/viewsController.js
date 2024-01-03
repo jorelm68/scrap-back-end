@@ -42,7 +42,6 @@ const resetPasswordConfirmation = async (req, res) => {
 
         const hashedPassword = await bcrypt.hash(newPassword, saltRounds)
         authorModel.password = hashedPassword
-        console.log('incremented token from:', authorModel.token, 'to', authorModel.token + 1)
         authorModel.token = authorModel.token + 1
         await authorModel.save()
 
