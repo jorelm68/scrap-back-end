@@ -48,6 +48,31 @@ const exists = async (req, res) => {
     }
     await handleRequest(req, res, code)
 }
+const autothenticate = async (req, res) => {
+    const code = async (req, res) => {
+        // Apply input validation and sanitization rules
+        await handleInputValidation(req, res, [
+            body('author').exists().withMessage('body: author is required'),
+            body('author').isMongoId().withMessage('body: author must be MongoId'),
+            body('token').exists().withMessage('body: token is required'),
+        ], validationResult)
+
+        const { author, token } = req.body
+
+        const authorModel = await Author.findById(author)
+        if (authorModel) {
+            const validToken = authorModel.token
+            if (token == validToken) {
+                return handleResponse(res, { autothenticate: true })
+            }
+            return handleResponse(res, { autothenticate: false })
+        }
+
+        return handleResponse(res, { autothenticate: false })
+
+    }
+    await handleRequest(req, res, code)
+}
 const signUp = async (req, res) => {
     const code = async (req, res) => {
         await handleInputValidation(req, res, [
@@ -69,6 +94,7 @@ const signUp = async (req, res) => {
             createdAt,
             miles,
             headshotAndCover,
+            token,
         } = req.body
 
         // Check if the pseudonym is already taken
@@ -96,6 +122,7 @@ const signUp = async (req, res) => {
 
             firstName: firstName ? firstName : '',
             lastName: lastName ? lastName : '',
+            token: token ? token : '0',
 
             headshotAndCover: headshotAndCover ? headshotAndCover : '',
 
@@ -118,7 +145,7 @@ const signUp = async (req, res) => {
         const templateContent = fs.readFileSync(templatePath, 'utf8');
 
 
-        const htmlContent = ejs.render(templateContent, { firstName: authorModel.firstName, confirmationToken: confirmationTokenModel._id })
+        const htmlContent = ejs.render(templateContent, { firstName: authorModel.firstName, confirmationToken: confirmationTokenModel._id, token: authorModel.token })
         await sendEmail(req, res, email, 'Activate Account', htmlContent)
 
         return handleResponse(res, { author: authorModel._id })
@@ -152,7 +179,7 @@ const signIn = async (req, res) => {
             return handleError(res, 400, 'Invalid credentials')
         }
 
-        return handleResponse(res, { author: authorModel._id, pseudonym: authorModel.pseudonym })
+        return handleResponse(res, { author: authorModel._id, pseudonym: authorModel.pseudonym, token: authorModel.token })
     }
     await handleRequest(req, res, code)
 }
@@ -212,6 +239,8 @@ const changePassword = async (req, res) => {
         const hashedPassword = await bcrypt.hash(newPassword, saltRounds)
         const authorModel = await Author.findById(author)
         authorModel.password = hashedPassword
+        authorModel.token = authorModel.token + 1
+
         await authorModel.save()
 
         return handleResponse(res, { author })
@@ -648,4 +677,5 @@ module.exports = {
     rejectRequest,
     removeFriend,
     removeAction,
+    autothenticate,
 }

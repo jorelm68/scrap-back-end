@@ -42,6 +42,7 @@ const resetPasswordConfirmation = async (req, res) => {
 
         const hashedPassword = await bcrypt.hash(newPassword, saltRounds)
         authorModel.password = hashedPassword
+        authorModel.token = authorModel.token + 1
         await authorModel.save()
 
         return res.render('resetPasswordSuccess', {})

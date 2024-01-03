@@ -1,6 +1,7 @@
 const express = require('express')
 const {
     exists,
+    autothenticate,
     signUp,
     signIn,
     deleteAccount,
@@ -18,6 +19,7 @@ const {
 const router = express.Router()
 
 router.post('/exists', exists)
+router.post('/autothenticate', autothenticate)
 router.post('/signUp', signUp)
 router.post('/signIn', signIn)
 router.post('/deleteAccount', deleteAccount)

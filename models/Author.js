@@ -17,6 +17,7 @@ const authorSchema = new Schema({
         type: String,
         required: true,
     },
+    token: Number,
     activated: Boolean,
     advertisements: Boolean,
 
