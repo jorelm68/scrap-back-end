@@ -43,7 +43,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // Log each request
 app.use((req, res, next) => {
-    console.log(req.path, req.method, req.body)
+    // console.log(req.path, req.method, req.body)
     next()
 })
 
@@ -72,9 +72,9 @@ mongoose.connect(process.env.MONGO_URI)
     .then(() => {
         // listen for requests
         app.listen(process.env.PORT, () => {
-            console.log(`connected to MongoDB & listening on port ${process.env.PORT}`)
+            // console.log(`connected to MongoDB & listening on port ${process.env.PORT}`)
         })
     })
     .catch((error) => {
-        console.log(error)
+        // console.log(error)
     })

@@ -16,7 +16,7 @@ const s3 = new AWS.S3({
 })
 
 const handleError = (res, status, error) => {
-    console.log('ERROR', error)
+    // console.log('ERROR', error)
     res.status(status)
     throw new Error(error)
 }
@@ -32,7 +32,7 @@ const handleRequest = async (req, res, code) => {
     }
 }
 const handleResponse = async (res, data) => {
-    console.log(data)
+    // console.log(data)
     return res.status(200).json(data)
 }
 const handleInputValidation = async (req, res, checks, validationResult) => {
@@ -319,24 +319,12 @@ const handleBookRemoveScrap = async (bookModel, scrapModel) => {
             scrapModel.save(),
         ])
 
-        console.log('b1')
-
         await unThread(bookModel, scrapModel)
-
-        console.log('b2')
-
         await recalculateBookMiles(bookModel)
-
-        console.log('b3')
-
         await recalculateBookDates(bookModel)
-
-        console.log('b4')
 
         const authorModel = await Author.findById(bookModel.author)
         await sortAuthorBooks(authorModel)
-
-        console.log('b5')
     }
 }
 const handleBookAddScrap = async (bookModel, scrapModel) => {
@@ -452,15 +440,11 @@ const deepDeleteBook = async (bookModel) => {
             await deepDeleteAction(actionModel)
         }
 
-        console.log('a')
-
         // Remove each scrap from the book
         for (const scrap of bookModel.scraps) {
             const scrapModel = await Scrap.findById(scrap)
             await handleBookRemoveScrap(bookModel, scrapModel)
         }
-
-        console.log('b')
 
         // Remove all threads between this book and any scraps
         for (const scrap of bookModel.threads) {
@@ -468,27 +452,19 @@ const deepDeleteBook = async (bookModel) => {
             await unThread(bookModel, scrapModel)
         }
 
-        console.log('c')
-
         // Remove any likes between this book and any authors
         for (const author of bookModel.likes) {
             const authorModel = await Author.findById(author)
             await unLike(bookModel, authorModel)
         }
 
-        console.log('d')
-
         // Remove the book from the author's library
         const authorModel = await Author.findById(bookModel.author)
         authorModel.books.pull(bookModel._id)
         await authorModel.save()
 
-        console.log('e')
-
         // Delete the book from MongoDB
         await Book.findOneAndDelete({ _id: bookModel._id })
-
-        console.log('e')
     }
 }
 const deepDeleteScrap = async (scrapModel) => {
@@ -520,7 +496,6 @@ const deepDeleteScrap = async (scrapModel) => {
 
             // Recalculate the author's miles traveled
             // await recalculateAuthorMiles(authorModel)
-            console.log(1)
         }
 
         // Delete the scrap from the book it is in
@@ -529,26 +504,18 @@ const deepDeleteScrap = async (scrapModel) => {
             await handleBookRemoveScrap(bookModel, scrapModel)
         }
 
-        console.log(2)
-
         // Remove the threads between this scrap and any books
         for (const book of scrapModel.threads) {
             const bookModel = await Book.findById(book)
             await unThread(bookModel, scrapModel)
         }
 
-        console.log(3)
-
         // Delete the Scrap's prograph and retrograph from AWS W3 storage
         await handleS3Delete(`photos/${scrapModel.prograph}.jpg`)
         await handleS3Delete(`photos/${scrapModel.retrograph}.jpg`)
 
-        console.log(4)
-
         // Delete the scrap from mongodb
         await Scrap.findOneAndDelete({ _id: scrapModel._id })
-
-        console.log(5)
     }
 }
 const deepDeleteAction = async (actionModel) => {
