@@ -3,18 +3,30 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Home Page</title>
+    <title>Scrap</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         /* Basic styling */
+        @font-face {
+            font-family: 'itim';
+            src: url('../fonts/Itim-Regular.ttf') format('truetype');
+        }
+
+        @font-face {
+            font-family: 'jockeyOne';
+            src: url('../fonts/JockeyOne-Regular.ttf') format('truetype');
+        }
+
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'itim';
             margin: 0;
             padding: 0;
-            background-color: #f4f4f4;
+            background-color: #000;
+            color: #fff;
         }
 
         header {
+            font-family: 'jockeyOne';
             background-color: #333;
             color: #fff;
             padding: 10px 20px;
@@ -28,7 +40,7 @@
         }
 
         .main-content {
-            background-color: #fff;
+            background-color: #000;
             padding: 20px;
             margin-top: 20px;
         }
@@ -36,7 +48,7 @@
         footer {
             text-align: center;
             padding: 10px 0;
-            background-color: #333;
+            background-color: #111;
             color: #fff;
         }
     </style>
@@ -44,19 +56,18 @@
 
 <body>
     <header>
-        <h1>Welcome to My Website</h1>
+        <h1>Scrap</h1>
     </header>
 
     <div class="container">
         <div class="main-content">
-            <h2>About Us</h2>
-            <p>This is a simple home page for a website. You can add more content here.</p>
-            <p>Feel free to explore our site!</p>
+            <h2>App Overview</h2>
+            <img src="../photos/profileBooks.jpg" alt="Profile Books">
         </div>
     </div>
 
     <footer>
-        <p>&copy; 2023 YourWebsiteName. All rights reserved.</p>
+        <p>&copy; 2023 Scrap. All rights reserved.</p>
     </footer>
 </body>
 
