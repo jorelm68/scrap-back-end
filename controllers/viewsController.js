@@ -1,5 +1,6 @@
 require('dotenv').config()
 const bcrypt = require('bcrypt')
+const fs = require('fs')
 const mongoose = require('mongoose')
 const PasswordToken = require('../models/PasswordToken')
 const ConfirmationToken = require('../models/ConfirmationToken')
@@ -111,8 +112,14 @@ const homePage = async (req, res) => {
 }
 
 const notificationIcon = async (req, res) => {
-    const buffer = fs.readFileSync('assets/icon.png')
+    const buffer = fs.readFileSync('assets/images/icon.png')
     res.setHeader('Content-Type', 'image/png')
+    res.send(buffer)
+}
+
+const profileBooksIcon = async (req, res) => {
+    const buffer = fs.readFileSync('assets/photos/profileBooks.jpg')
+    res.setHeader('Content-Type', 'image/jpg')
     res.send(buffer)
 }
 
@@ -124,4 +131,5 @@ module.exports = {
     changeEmail,
     homePage,
     notificationIcon,
+    profileBooksIcon,
 }
