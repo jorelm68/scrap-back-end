@@ -33,6 +33,24 @@
             text-align: center;
         }
 
+
+        .columns {
+            display: flex;
+            justify-content: space-evenly;
+            /* Adjust this property based on your layout preference */
+            align-items: center;
+            /* Align items vertically at the center */
+        }
+
+        .text {
+            font-family: 'itim';
+            background-color: #111;
+            color: #fff;
+            padding: 10px 20px;
+            text-align: center;
+            font-size: 18px;
+        }
+
         .container {
             width: 80%;
             margin: auto;
@@ -51,6 +69,21 @@
             background-color: #111;
             color: #fff;
         }
+
+        .columns img {
+            width: 25%;
+            height: auto;
+        }
+
+        .quarter img {
+            width: 24%;
+            height: auto;
+        }
+
+        .book img {
+            width: 19%;
+            height: auto;
+        }
     </style>
 </head>
 
@@ -61,13 +94,64 @@
 
     <div class="container">
         <div class="main-content">
-            <h2>App Overview</h2>
-            <img src="" alt="Profile Books" width="100">
+            <h2>What is Scrap?</h2>
+
+            <div class="columns">
+                <img src="http://localhost:4000/profileMap" alt="Profile Map">
+                <p class="text">Scrap is an online digital scrapbooking app!<br>
+                    It offers a convenient way to document your memories on the go and share them with your
+                    friends!<br><br>
+                    Display your travels on a map in chronological order!<br>
+                    Share with friends by posting <strong>Books!</strong><br>
+                    Connect with friends by <strong>threading</strong> books together!<br>
+                </p>
+            </div>
+
+            <div class="columns">
+                <img src="http://localhost:4000/libraryScrapsImage" alt="Library Scraps">
+
+                <p class="text">Here are some Scraps I've taken on the left, as well as some Books I've made on the
+                    right!<br><br>
+                    By organizing your Scraps into Books, you and your friends can easily navigate your content!<br><br>
+                    Worried about privacy? Others can only see your Scraps when you add them to a <strong>Public
+                        Book!</strong><br><br>
+
+                </p>
+
+                <img src="http://localhost:4000/profileBooksImage" alt="Profile Books">
+            </div>
+
+            <div class="columns">
+                <div class="columns">
+                    <img src="http://localhost:4000/cameraPrograph" alt="Camera Prograph">
+                    <img src="http://localhost:4000/cameraRetrograph" alt="Camera Retrograph">
+                </div>
+
+                <p class="text">The only way to get images into the app is to <strong>Make Memories NOW!</strong> It's
+                    intentionally
+                    not possible to import images from elsewhere!<br><br></p>
+            </div>
+
+
+            <p class="text">Below is a Book I made when traveling to one of my dance competitions!<br></p>
+
+            <div class="book">
+                <img src="http://localhost:4000/book1Image" alt="Scrap 1">
+                <img src="http://localhost:4000/book2Image" alt="Scrap 2">
+                <img src="http://localhost:4000/book3Image" alt="Scrap 3">
+                <img src="http://localhost:4000/book4Image" alt="Scrap 4">
+                <img src="http://localhost:4000/book5Image" alt="Scrap 5">
+                <img src="http://localhost:4000/book6Image" alt="Scrap 6">
+                <img src="http://localhost:4000/book7Image" alt="Scrap 7">
+                <img src="http://localhost:4000/book8Image" alt="Scrap 8">
+                <img src="http://localhost:4000/book9Image" alt="Scrap 9">
+                <img src="http://localhost:4000/book10Image" alt="Scrap 10">
+            </div>
         </div>
     </div>
 
     <footer>
-        <p>&copy; 2023 Scrap. All rights reserved.</p>
+        <p>&copy; 2024 Scrap. All rights reserved.</p>
     </footer>
 </body>
 
